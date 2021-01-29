@@ -4,10 +4,11 @@
 # pytest -q test_simulator.py
 import pytest
 import pandas as pd
-from cers import cers
+from SWRsimulator import SWRsimulator
 # mixed return and weights
 RETURN_URL = 'http://www.stern.nyu.edu/~adamodar/pc/datasets/histretSP.xls'
 RETURN_FILE = 'histretSP'
+
 
 def download_returns():
     data_sheet = "Returns by year"
@@ -27,115 +28,181 @@ def load_returns():
     return pd.read_pickle('%s.pickle' % RETURN_FILE)
 
 
+def trial_generator(df, start_year, n_years):
+    """given a dataframe of returns, starting year, number of years, generate schedule of returns"""
+    for t in df.loc[start_year:start_year+n_years-1].itertuples():
+        yield tuple(t)
+
+
 def test_zero():
     """no returns, no spending, just check shape"""
     download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]]
+    return_df = download_df.iloc[:, [0, 2]].copy()
     return_df.columns = ['stocks', 'tbonds']
-    zero_df = return_df.copy()
-    zero_df['stocks'] = 0
-    zero_df['tbonds'] = 0
-    s = cers.Simulator(zero_df, 30, )
-    z = s.simulate_trial(1928, [0.5, 0.5], 0.0, 0.0)
-    assert(z.index[0]) == 1928, "start year == 1928"
-    assert(z.index[-1]) == 1957, "end year == 1957"
-    assert len(z) == 30, "length == 30"
+    return_df['stocks'] = 0
+    return_df['tbonds'] = 0
 
-def test_fixed():
+    trials = [trial_generator(return_df, 1928, 30)].copy()
+
+    s = SWRsimulator.SWRsimulator({
+        'simulator': {'n_ret_years': 30,
+                      'n_assets': 2,
+                      'trials': trials},
+        'allocation': {},
+        'spending': {'fixed_pct': 0.0,
+                     'variable_pct': 0.0},
+        'evaluation': {},
+    })
+
+    z = s.simulate_trial(trial_generator(return_df, 1928, 30))
+    assert len(z) == 30
+    assert (z.index[0]) == 1928, "start year == 1928"
+    assert (z.index[-1]) == 1957, "end year == 1957"
+
+
+def test_fixed1():
     """zero returns, fixed spending, check starting, ending vals"""
+    # zero returns, spend 2% per year, check ending value declines to 0.4
 
-    FIXED_RETURN = 0.02
+    RETURN = 0.0
+    FIXED = 2.0
+    VARIABLE = 0.00
     NYEARS = 30
+
     download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]]
+    return_df = download_df.iloc[:, [0, 2]].copy()
     return_df.columns = ['stocks', 'tbonds']
-    zero_df = return_df.copy()
-    zero_df['stocks'] = 0
-    zero_df['tbonds'] = 0
-    s = cers.Simulator(zero_df, NYEARS, )
-    z = s.simulate_trial(1928, [0.5, 0.5], FIXED_RETURN, 0.0)
-    assert(z['starting'].iloc[0]) == 100, "start port value == 100"
-    assert(z['ending'].iloc[-1]) == 100 - NYEARS * FIXED_RETURN * 100, "end port value == 40"
+    return_df['stocks'] = RETURN
+    return_df['tbonds'] = RETURN
+
+    trials = [trial_generator(return_df, 1928, NYEARS)]
+
+    s = SWRsimulator.SWRsimulator({
+        'simulator': {'n_ret_years': NYEARS,
+                      'n_assets': 2,
+                      'trials': trials},
+        'allocation': {},
+        'spending': {'fixed_pct': FIXED,
+                     'variable_pct': VARIABLE},
+        'evaluation': {},
+    })
+
+    z = s.simulate_trial(trial_generator(return_df, 1928, 30))
+
+    assert (z['start_port'].iloc[0]) == 100, "start port value == 100"
+    assert (z['end_port'].iloc[-1]) == 40, "ending port value == 40"
 
 
-def test_variable():
+def test_variable1():
     """zero returns, variable spending, check starting, ending vals"""
 
-    VARIABLE_RETURN = 0.02
+    RETURN = 0.0
+    FIXED = 0
+    VARIABLE = 2.0
     NYEARS = 30
+
     download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]]
+    return_df = download_df.iloc[:, [0, 2]].copy()
     return_df.columns = ['stocks', 'tbonds']
-    zero_df = return_df.copy()
-    zero_df['stocks'] = 0
-    zero_df['tbonds'] = 0
-    s = cers.Simulator(zero_df, NYEARS, )
-    z = s.simulate_trial(1928, [0.5, 0.5], 0.0, VARIABLE_RETURN)
-    assert(z['starting'].iloc[0]) == 100, "start port value == 100"
-    assert(z['ending'].iloc[-1]) == 100 * ((1 - VARIABLE_RETURN) ** NYEARS), "end port value correct"
+    return_df['stocks'] = RETURN
+    return_df['tbonds'] = RETURN
+
+    trials = [trial_generator(return_df, 1928, NYEARS)]
+
+    s = SWRsimulator.SWRsimulator({
+        'simulator': {'n_ret_years': NYEARS,
+                      'n_assets': 2,
+                      'trials': trials},
+        'allocation': {},
+        'spending': {'fixed_pct': FIXED,
+                     'variable_pct': VARIABLE},
+        'evaluation': {},
+    })
+
+    print(s)
+
+    z = s.simulate_trial(trial_generator(return_df, 1928, 30))
+
+    assert (z['start_port'].iloc[0]) == 100, "start port value == 100"
+    assert z['end_port'].iloc[-1] == pytest.approx(100 * ((1 - VARIABLE / 100) ** NYEARS), 0.000001)
+    z
 
 
-def test_fixed_spend():
+def test_fixed2():
     """fixed returns, fixed spending, check starting, ending vals"""
 
-    RETURN = 0.02
-    FIXED = 0.02
+    # 4% real return, spend fixed 4% of starting, assert ending value unchanged
+    RETURN = 0.04
+    FIXED = 4
+    VARIABLE = 0.0
     NYEARS = 30
+
     download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]]
+    return_df = download_df.iloc[:, [0, 2]].copy()
     return_df.columns = ['stocks', 'tbonds']
-    zero_df = return_df.copy()
-    zero_df['stocks'] = RETURN
-    zero_df['tbonds'] = RETURN
-    s = cers.Simulator(zero_df, NYEARS, )
-    z = s.simulate_trial(1928, [0.5, 0.5], FIXED, 0)
-    assert (z['starting'].iloc[0]) == 100, "start port value == 100"
-    assert (z['ending'].iloc[-1]) == 100, "end port value correct"
+    return_df['stocks'] = RETURN
+    return_df['tbonds'] = RETURN
+
+    trials = [trial_generator(return_df, 1928, NYEARS)]
+
+    s = SWRsimulator.SWRsimulator({
+        'simulator': {'n_ret_years': 30,
+                      'n_assets': 2,
+                      'trials': trials},
+        'allocation': {},
+        'spending': {'fixed_pct': FIXED,
+                     'variable_pct': VARIABLE},
+        'evaluation': {},
+    })
+
+    z = s.simulate_trial(trial_generator(return_df, 1928, 30))
+
+    assert (z['start_port'].iloc[0]) == 100, "start port value == 100"
+    assert (z['end_port'].iloc[-1]) == 100, "end port value correct"
 
 
-def test_variable_spend():
+def test_variable2():
     """fixed returns, fixed spending, check starting, ending vals"""
-
+    # return 0.02% variable spending 0.02/1.02, check final value unchanged
     RETURN = 0.02
-    VARSPEND = 0.02 / 1.02
+    FIXED = 0.0
+    VARIABLE = 0.02 / 1.02 * 100
     NYEARS = 30
+
     download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]]
+    return_df = download_df.iloc[:, [0, 2]].copy()
     return_df.columns = ['stocks', 'tbonds']
-    zero_df = return_df.copy()
-    zero_df['stocks'] = RETURN
-    zero_df['tbonds'] = RETURN
-    s = cers.Simulator(zero_df, NYEARS, )
-    z = s.simulate_trial(1928, [0.5, 0.5], 0, VARSPEND)
-    assert (z['starting'].iloc[0]) == 100, "start port value == 100"
-    assert (z['ending'].iloc[-1]) == 100, "end port value correct"
+    return_df['stocks'] = RETURN
+    return_df['tbonds'] = RETURN
+
+    trials = [trial_generator(return_df, 1928, NYEARS)]
+
+    s = SWRsimulator.SWRsimulator({
+        'simulator': {'n_ret_years': 30,
+                      'n_assets': 2,
+                      'trials': trials},
+        'allocation': {},
+        'spending': {'fixed_pct': FIXED,
+                     'variable_pct': VARIABLE},
+        'evaluation': {},
+    })
+
+    z = s.simulate_trial(trial_generator(return_df, 1928, 30))
+
+    assert (z['start_port'].iloc[0]) == 100, "start port value == 100"
+    assert (z['end_port'].iloc[-1]) == 100, "end port value correct"
 
 
-def test_simple():
-    """historical returns, 2% fixed and variable, check starting, ending vals"""
-
-    # download_df = download_returns()
-    download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]]
-    return_df.columns = ['stocks', 'tbonds']
-    s = cers.Simulator(return_df, 30, )
-    z = s.simulate_trial(1928, [0.5, 0.5], 0.02, 0.02)
-
-    assert z['starting'].iloc[0] == 100, "starting value == 100"
-    assert z['ending'].iloc[-1] == 182.38655685622794, "ending value == 213.935"
-    assert len(z) == 30, "length == 30"
-
-def test_simple():
+def test_bengen():
     """matches Bengen values, modulo using real values throughout"""
-
     # per appendix of Bengen paper https://www.retailinvestor.org/pdf/Bengen1.pdf
     # nominal return 10% for stocks, 5% for bonds
     # inflation 3%
     # fixed spending of 4% of orig port
-    STOCK_RETURN = (1.1 / 1.03) -1
-    BOND_RETURN = (1.05 / 1.03) -1
-    VAR_SPEND = 0
-    FIXED_SPEND = 0.04
+    STOCK_RETURN = (1.1 / 1.03) - 1
+    BOND_RETURN = (1.05 / 1.03) - 1
+    VARIABLE = 0.0
+    FIXED = 4.0
     NYEARS = 30
 
     download_df = load_returns()
@@ -143,7 +210,23 @@ def test_simple():
     return_df.columns = ['stocks', 'tbonds']
     return_df['stocks'] = STOCK_RETURN
     return_df['tbonds'] = BOND_RETURN
-    s = cers.Simulator(return_df, NYEARS, )
-    z = s.simulate_trial(1928, [0.5, 0.5], FIXED_SPEND, VAR_SPEND)
+
+    trials = [trial_generator(return_df, 1928, NYEARS)]
+
+    s = SWRsimulator.SWRsimulator({
+        'simulator': {'n_ret_years': NYEARS,
+                      'n_assets': 2,
+                      'trials': trials},
+        'allocation': {},
+        'spending': {'fixed_pct': FIXED,
+                     'variable_pct': VARIABLE},
+        'evaluation': {},
+    })
+
+    z = s.simulate_trial(trial_generator(return_df, 1928, 30))
+    # match figures in appendix
+    # example uses nominal vals with 3% inflation, we use real vals
+    assert z.iloc[0]['before_spend'] * 1.03 == pytest.approx(107.5, 0.000001)
     assert z.iloc[0]['spend'] * 1.03 == 4.12, "spend does not match Bengen"
-    assert z.iloc[0]['ending'] * 1.03 == pytest.approx(103.38, 0.01), "ending port does not match Bengen"
+    assert z.iloc[0]['end_port'] * 1.03 == pytest.approx(103.38, 0.000001), "ending port does not match Bengen"
+
