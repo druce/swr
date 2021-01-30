@@ -37,7 +37,7 @@ def trial_generator(df, start_year, n_years):
 def test_zero():
     """no returns, no spending, just check shape"""
     download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]].copy()
+    return_df = download_df.iloc[:, [0, 2]]
     return_df.columns = ['stocks', 'tbonds']
     return_df['stocks'] = 0
     return_df['tbonds'] = 0

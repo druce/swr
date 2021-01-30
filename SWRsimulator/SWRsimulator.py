@@ -25,6 +25,7 @@ class Trialdata:
     before_spends: List[float] = field(default_factory=list)
     end_ports: List[float] = field(default_factory=list)
     spends: List[float] = field(default_factory=list)
+    trial_df: pd.DataFrame = None
 
 
 class SWRsimulator:
@@ -71,7 +72,12 @@ class SWRsimulator:
         return portval * self.spending['variable'] + self.spending['fixed']
 
     def eval_trial(self):
-        return 0
+        min_end_port_index = int(np.argmin(self.current_trial.end_ports))
+        min_end_port_value = self.current_trial.end_ports[min_end_port_index]
+        if min_end_port_value == 0.0:
+            return min_end_port_index
+        else:
+            return self.simulator['n_ret_years']
 
     def simulate(self, do_eval=False, return_all=True):
         """simulate many trials"""
@@ -113,10 +119,11 @@ class SWRsimulator:
             current_trial.portval *= (1 + port_return)
             current_trial.before_spends.append(current_trial.portval)
 
-            current_trial.spend = self.get_spend()
+            current_trial.spend = self.get_spend()  # desired spend
+            current_trial.spend = min(current_trial.spend, current_trial.portval)  # actual spend
             current_trial.spends.append(current_trial.spend)
 
-            current_trial.portval -= current_trial.spend
+            current_trial.portval = current_trial.portval - current_trial.spend
             current_trial.end_ports.append(current_trial.portval)
 
         # pd.DataFrame(data=np.vstack(z.asset_allocations), index=z.years, columns=["alloc_%d" % i for i in range(2)])
@@ -130,7 +137,8 @@ class SWRsimulator:
         alloc_df = pd.DataFrame(data=np.vstack(current_trial.asset_allocations),
                                 index=current_trial.years,
                                 columns=["alloc_%d" % i for i in range(2)])
-        return pd.concat([ret_df, alloc_df], axis=1)
+        current_trial.trial_df = pd.concat([ret_df, alloc_df], axis=1)
+        return current_trial.trial_df
 
 
 if __name__ == '__main__':
