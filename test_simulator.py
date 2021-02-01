@@ -4,7 +4,7 @@
 # pytest -q test_simulator.py
 import pytest
 import pandas as pd
-from SWRsimulator import SWRsimulator
+from SWRsimulation import SWRsimulation
 # mixed return and weights
 RETURN_URL = 'http://www.stern.nyu.edu/~adamodar/pc/datasets/histretSP.xls'
 RETURN_FILE = 'histretSP'
@@ -44,7 +44,7 @@ def test_zero():
 
     trials = [trial_generator(return_df, 1928, 30)].copy()
 
-    s = SWRsimulator.SWRsimulator({
+    s = SWRsimulation.SWRsimulator({
         'simulator': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
@@ -77,7 +77,7 @@ def test_fixed1():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulator.SWRsimulator({
+    s = SWRsimulation.SWRsimulator({
         'simulator': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
@@ -109,7 +109,7 @@ def test_variable1():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulator.SWRsimulator({
+    s = SWRsimulation.SWRsimulator({
         'simulator': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
@@ -145,7 +145,7 @@ def test_fixed2():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulator.SWRsimulator({
+    s = SWRsimulation.SWRsimulator({
         'simulator': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
@@ -177,7 +177,7 @@ def test_variable2():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulator.SWRsimulator({
+    s = SWRsimulation.SWRsimulator({
         'simulator': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
@@ -213,7 +213,7 @@ def test_bengen():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulator.SWRsimulator({
+    s = SWRsimulation.SWRsimulator({
         'simulator': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
