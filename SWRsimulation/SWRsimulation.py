@@ -335,5 +335,6 @@ class SWRsimulation:
                        color="start_year",
                        hover_name="start_year")
 
+
 if __name__ == '__main__':
     print('Executing as standalone script')
