@@ -3,10 +3,11 @@ import pandas as pd
 import pprint
 from dataclasses import dataclass, field
 from typing import List
+import pdb
 
-from plotly import graph_objects as go
-from plotly.subplots import make_subplots
-import plotly.express as px
+# from plotly import graph_objects as go
+# from plotly.subplots import make_subplots
+# import plotly.express as px
 
 import matplotlib.pyplot as plt
 
@@ -80,15 +81,22 @@ class SWRsimulation:
         return retstr
 
     def get_allocations(self):
-        """equal-weight allocations"""
+        """use provided config or equal-weight allocations"""
         if self.latest_trial.iteration == 0:
-            self.allocation['equal_weight'] = np.ones(self.simulation['n_assets']) / self.simulation['n_assets']
+            if self.allocation.get('asset_weights') is None:
+                # default equal-weighted
+                self.allocation['asset_weights'] = np.ones(self.simulation['n_assets']) / self.simulation['n_assets']
 
-        return self.allocation['equal_weight']
+        return self.allocation['asset_weights']
 
     def get_spend(self):
         """fixed + variable based on config"""
         if self.latest_trial.iteration == 0:
+            # set defaults
+            if self.withdrawal.get('variable_pct') is None:
+                self.withdrawal['variable_pct'] = 0.0
+            if self.withdrawal.get('fixed_pct') is None:
+                self.withdrawal['fixed_pct'] = 0.0
             # initialize withdrawal parameters
             self.withdrawal['variable'] = self.withdrawal['variable_pct'] / 100
             self.withdrawal['fixed'] = self.withdrawal['fixed_pct'] / 100 * START_PORTVAL
@@ -207,7 +215,7 @@ class SWRsimulation:
 
             c, bins = np.histogram(survival, bins=np.linspace(0, 30, 31))
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
-            print("%.2f%% of portfolios exhausted before final year" % pct_exhausted)
+            print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
             fig, axs = plt.subplots(2, figsize=(20, 20))
             axs[0].set_title("Histogram of Years to Exhaustion (1000 Trials)", fontsize=20)
             axs[0].set_yscale('log')

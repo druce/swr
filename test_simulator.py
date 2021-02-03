@@ -1,7 +1,7 @@
-# test_simulator.py
+# test_simulation.py
 
 # pip install pytest
-# pytest -q test_simulator.py
+# pytest -q test_simulation.py
 import pytest
 import pandas as pd
 from SWRsimulation import SWRsimulation
@@ -37,19 +37,19 @@ def trial_generator(df, start_year, n_years):
 def test_zero():
     """no returns, no spending, just check shape"""
     download_df = load_returns()
-    return_df = download_df.iloc[:, [0, 2]]
+    return_df = download_df.iloc[:, [0, 2]].copy()
     return_df.columns = ['stocks', 'tbonds']
     return_df['stocks'] = 0
     return_df['tbonds'] = 0
 
     trials = [trial_generator(return_df, 1928, 30)].copy()
 
-    s = SWRsimulation.SWRsimulator({
-        'simulator': {'n_ret_years': 30,
+    s = SWRsimulation.SWRsimulation({
+        'simulation': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
         'allocation': {},
-        'spending': {'fixed_pct': 0.0,
+        'withdrawal': {'fixed_pct': 0.0,
                      'variable_pct': 0.0},
         'evaluation': {},
     })
@@ -77,12 +77,12 @@ def test_fixed1():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulator({
-        'simulator': {'n_ret_years': NYEARS,
+    s = SWRsimulation.SWRsimulation({
+        'simulation': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
         'allocation': {},
-        'spending': {'fixed_pct': FIXED,
+        'withdrawal': {'fixed_pct': FIXED,
                      'variable_pct': VARIABLE},
         'evaluation': {},
     })
@@ -109,12 +109,12 @@ def test_variable1():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulator({
-        'simulator': {'n_ret_years': NYEARS,
+    s = SWRsimulation.SWRsimulation({
+        'simulation': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
         'allocation': {},
-        'spending': {'fixed_pct': FIXED,
+        'withdrawal': {'fixed_pct': FIXED,
                      'variable_pct': VARIABLE},
         'evaluation': {},
     })
@@ -145,12 +145,12 @@ def test_fixed2():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulator({
-        'simulator': {'n_ret_years': 30,
+    s = SWRsimulation.SWRsimulation({
+        'simulation': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
         'allocation': {},
-        'spending': {'fixed_pct': FIXED,
+        'withdrawal': {'fixed_pct': FIXED,
                      'variable_pct': VARIABLE},
         'evaluation': {},
     })
@@ -177,12 +177,12 @@ def test_variable2():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulator({
-        'simulator': {'n_ret_years': 30,
+    s = SWRsimulation.SWRsimulation({
+        'simulation': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
         'allocation': {},
-        'spending': {'fixed_pct': FIXED,
+        'withdrawal': {'fixed_pct': FIXED,
                      'variable_pct': VARIABLE},
         'evaluation': {},
     })
@@ -213,12 +213,12 @@ def test_bengen():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulator({
-        'simulator': {'n_ret_years': NYEARS,
+    s = SWRsimulation.SWRsimulation({
+        'simulation': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
         'allocation': {},
-        'spending': {'fixed_pct': FIXED,
+        'withdrawal': {'fixed_pct': FIXED,
                      'variable_pct': VARIABLE},
         'evaluation': {},
     })
