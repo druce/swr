@@ -216,7 +216,7 @@ class SWRsimulation:
             return self.simulation['n_ret_years']
 
     def eval_ce(self):
-        return crra_ce(self.latest_trial.trial_df['spend'], 1)
+        return crra_ce(self.latest_trial.trial_df['spend'], 0)
     
     def eval_trial(self):
         
