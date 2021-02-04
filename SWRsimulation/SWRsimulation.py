@@ -9,6 +9,8 @@ import pdb
 # from plotly.subplots import make_subplots
 # import plotly.express as px
 
+# TODO: by default don't keep all trials, only if specified explicitly
+
 import matplotlib.pyplot as plt
 
 START_PORTVAL = 100.0
@@ -204,7 +206,7 @@ class SWRsimulation:
         portval = self.latest_trial.portval
         return portval * self.withdrawal['variable'] + self.withdrawal['fixed']
 
-    def eval_trial(self):
+    def eval_exhaustion(self):
         """which year portfolio is exhausted, or n_ret_years if never exhausted"""
         min_end_port_index = int(np.argmin(self.latest_trial.end_ports))
         min_end_port_value = self.latest_trial.end_ports[min_end_port_index]
@@ -213,6 +215,14 @@ class SWRsimulation:
         else:
             return self.simulation['n_ret_years']
 
+    def eval_ce(self):
+        return crra_ce(self.latest_trial.trial_df['spend'], 1)
+    
+    def eval_trial(self):
+        
+        return {'years_to_exhaustion': self.eval_exhaustion(),
+                'ce_spend': self.eval_ce()}
+    
     def historical_trial_generator(self, start_year):
         """generate asset returns for 1 latest_trial, n_ret_years long, given a dataframe of returns, starting year"""
         df = self.simulation['returns_df']
@@ -242,7 +252,7 @@ class SWRsimulation:
         for i in range(n_trials):
             yield self.montecarlo_trial_generator(replace=replace)
 
-    def simulate(self, do_eval=False, return_both=True):
+    def simulate(self, do_eval=True, return_both=True):
         """simulate many trials, return a list of latest_trial dataframes and/or optional evaluation metrics"""
 
         self.latest_simulation = []
@@ -253,13 +263,14 @@ class SWRsimulation:
 
             if do_eval:
                 # evaluate latest_trial
-                eval_metric = self.eval_trial()
+                eval_metrics_dict = self.eval_trial()
                 if return_both:  # both dataframe and eval_metric
-                    self.latest_simulation.append([trial_df, eval_metric])
+                    df_dict = {'trial': trial_df}
+                    self.latest_simulation.append({**df_dict, **eval_metrics_dict})  # merge dicts
                 else:  # eval metric only
-                    self.latest_simulation.append(eval_metric)
+                    self.latest_simulation.append(eval_metrics_dict)
             else:  # dataframe only
-                self.latest_simulation.append(trial_df)
+                self.latest_simulation.append({'trial': trial_df})
 
         return self.latest_simulation
 
@@ -310,8 +321,9 @@ class SWRsimulation:
             # histogram
             # TODO: add more logic, save return_both and act accordingly
             start_years = [i for i in range(len(self.latest_simulation))]
-            survival = [np.sum(np.where(trial['end_port'].values > 0, 1, 0))
-                        for trial in self.latest_simulation]
+            
+            survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
+                        for trial_dict in self.latest_simulation]
 
             c, bins = np.histogram(survival, bins=np.linspace(0, 30, 31))
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
@@ -325,9 +337,9 @@ class SWRsimulation:
 
         else:
             # bar chart of all simulation outcomes
-            start_years = [trial.index[0] for trial in self.latest_simulation]
-            survival = [np.sum(np.where(trial['end_port'].values > 0, 1, 0))
-                        for trial in self.latest_simulation]
+            start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
+            survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
+                        for trial_dict in self.latest_simulation]
             years_survived_df = pd.DataFrame(data={'nyears': survival},
                                           index=start_years)
 
@@ -337,7 +349,7 @@ class SWRsimulation:
             axs[0].set_xlabel('Retirement Year', fontsize=16)
             axs[0].bar(years_survived_df.index, years_survived_df['nyears'])
 
-        portvals = np.array([trial['end_port'].values for trial in self.latest_simulation])
+        portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_rows, portval_cols = portvals.shape
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * 100), portvals]).T,
                                   columns=start_years)
@@ -352,14 +364,14 @@ class SWRsimulation:
 
 
     def analyze_plotly(self):
-        start_years = [trial.index[0] for trial in self.latest_simulation]
-        survival = [np.sum(np.where(trial['end_port'].values > 0, 1, 0))
-                    for trial in self.latest_simulation]
+        start_years = [trial.index[0] for trial_dict in self.latest_simulation]
+        survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
+                    for trial_dict in self.latest_simulation]
         years_survived = pd.DataFrame(data={'nyears': survival},
                                       index=start_years).reset_index()
 
-        portvals = np.array([trial['end_port'].values for trial in self.latest_simulation])
-        years = [trial.index[0] for trial in self.latest_simulation]
+        portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
+        years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals]).T,
                                   columns=years)
         portval_df['mean'] = portval_df.mean(axis=1)
@@ -417,9 +429,9 @@ class SWRsimulation:
 
     def analyze_plotly_express(self):
         """output px survival and port value charts"""
-        start_years = [trial.index[0] for trial in self.latest_simulation]
-        survival = [self.simulation['n_ret_years'] - len(np.where(trial['spend'].values == 0.0))
-                    for trial in self.latest_simulation]
+        start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
+        survival = [self.simulation['n_ret_years'] - len(np.where(trial_dict['trial']['spend'].values == 0.0))
+                    for trial_dict in self.latest_simulation]
         years_survived = pd.DataFrame(data={'nyears': survival},
                                       index=start_years).reset_index()
 
@@ -428,9 +440,9 @@ class SWRsimulation:
 
     def analyze_plotly_express2(self):
 
-        portvals = np.array([trial['end_port'].values for trial in self.latest_simulation])
+        portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals])).transpose()
-        col_list = [trial.index[0] for trial in self.latest_simulation]
+        col_list = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         portval_df.columns = col_list
         portval_df['mean'] = portval_df.mean(axis=1)
         portval_df.reset_index(inplace=True)
