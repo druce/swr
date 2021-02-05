@@ -5,7 +5,16 @@ import pytest
 def crra_ce(cashflows, gamma):
     """takes a numpy array, returns total CRRA certainty-equivalent cash flow"""
     # for retirement study assume no negative cashflows
-    if sum(np.where(cashflows < 0, 1, 0)):
+
+    # calibration factor
+    # make the total CE cash flow for Bengen rule == 0.1, to reduce numerical problems
+    # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
+    # when utility approaches this limit, small improvements in cash flow don't numerically change utility
+    # otherwise when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
+    calibration_factor = len(cashflows) * 4 * 10
+    cashflows = cashflows/calibration_factor
+
+    if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     elif gamma >= 1.0 and 0 in cashflows:
         return 0.0
@@ -35,7 +44,7 @@ def crra_ce(cashflows, gamma):
         u = np.mean((cashflows ** g_1m - 1.0) / g_1m)
         ce = (g_1m * u + 1.0) ** (1.0 / g_1m)
 
-    return ce * len(cashflows)
+    return ce * len(cashflows) * calibration_factor
 
 
 def crra_ce_deathrate(cashflows, gamma, deathrate):
@@ -50,9 +59,12 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
     each member of cohort that died in a given year experienced CE cash flow * years alive
     """
     # for retirement study assume no negative cashflows
-    if sum(np.where(cashflows < 0, 1, 0)):
+    if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     else:
+        calibration_factor = len(cashflows) * 4 * 10
+        cashflows = cashflows / calibration_factor
+
         # 1..lastyear
         indices = np.indices(cashflows.shape)[0] + 1
 
@@ -92,11 +104,14 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
             ce = ce * indices
         # mortality_adjusted ce cash flows
         madj_ce = np.sum(ce * deathrate)
-        return madj_ce
+        return madj_ce * calibration_factor
 
 
 def general_ce(cashflows, gamma):
     cashflows = np.longdouble(cashflows)
+    calibration_factor = np.sum(cashflows) * 10
+    cashflows /= calibration_factor
+
     if gamma == 1:
         u = np.mean(np.log(cashflows))
         ce = np.exp(u)
@@ -104,7 +119,7 @@ def general_ce(cashflows, gamma):
         u = np.mean((cashflows ** (1 - gamma) - 1) / (1 - gamma))
         ce = (1 + u * (1 - gamma)) ** (1 / (1 - gamma))
     ce = np.float(ce)
-    return ce * len(cashflows)
+    return ce * len(cashflows) * calibration_factor
 
 
 if __name__ == '__main__':

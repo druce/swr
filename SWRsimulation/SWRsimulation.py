@@ -3,11 +3,10 @@ import pandas as pd
 import pprint
 from dataclasses import dataclass, field
 from typing import List
-import pdb
 
-# from plotly import graph_objects as go
-# from plotly.subplots import make_subplots
-# import plotly.express as px
+from plotly import graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
 
 # TODO: by default don't keep all trials, only if specified explicitly
 
@@ -35,19 +34,23 @@ class Trialdata:
 
 
 def crra_ce(cashflows, gamma):
-    """takes a 1D numpy array, and gamma risk aversion parameter
-    returns total CRRA certainty-equivalent cash flow for specified gamma"""
-    
+    """takes a numpy array, returns total CRRA certainty-equivalent cash flow"""
     # for retirement study assume no negative cashflows
+
+    # calibration factor
+    # make the total CE cash flow for Bengen rule == 0.1, to reduce numerical problems
+    # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
+    # when utility approaches this limit, small improvements in cash flow don't numerically change utility
+    # otherwise when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
+    calibration_factor = len(cashflows) * 4 * 10
+    cashflows = cashflows/calibration_factor
+
     if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     elif gamma >= 1.0 and 0 in cashflows:
         return 0.0
-    elif gamma == 0.0:
-        # 0 risk aversion
-        ce = np.mean(cashflows)
     elif gamma == 1.0:
-        # log utility
+        # general formula for CRRA utility undefined for test_gamma = 1 but limit as test_gamma->1 = log
         u = np.mean(np.log(cashflows))
         ce = np.exp(u)
     elif gamma == 2.0:  # simple optimization
@@ -71,41 +74,41 @@ def crra_ce(cashflows, gamma):
         g_1m = 1 - gamma
         u = np.mean((cashflows ** g_1m - 1.0) / g_1m)
         ce = (g_1m * u + 1.0) ** (1.0 / g_1m)
-    return ce * len(cashflows)
 
-                                            
+    return ce * len(cashflows) * calibration_factor
+
 
 def crra_ce_deathrate(cashflows, gamma, deathrate):
     """ce cash flow with a mortality curve
     cash flows = real cash flows in each year of cohort
-    gamma = risk aversion
+    test_gamma = risk aversion
     death rate = % of cohort that died in each year of cohort
-    
-    compute utility of each cash flow under gamma
+
+    compute utility of each cash flow under test_gamma
     compute cumulative mean of utilities up to each year
     convert utilities back to CE cash flows
     each member of cohort that died in a given year experienced CE cash flow * years alive
     """
     # for retirement study assume no negative cashflows
-    
-    if sum(np.where(cashflows < 0, 1, 0)):
+    if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     else:
+        calibration_factor = len(cashflows) * 4 * 10
+        cashflows = cashflows / calibration_factor
+
         # 1..lastyear
-        indices = np.indices(cashflows.shape)[0]+1
-        if gamma == 0.0:
-            # 0 risk aversion
-            ce = np.mean(cashflows)
-        elif gamma == 1.0:
-            # log utility
+        indices = np.indices(cashflows.shape)[0] + 1
+
+        if gamma == 1.0:
+            # utility
             u = np.log(cashflows)
             # cumulative mean utility
-            u_mean = np.cumsum(u)/indices
+            u_mean = np.cumsum(u) / indices
             # cumulative mean ce cash flows
             ce = np.exp(u_mean) * indices
         elif gamma == 2.0:  # simple optimization
             u2 = 1 - 1.0 / cashflows
-            u2_mean = np.cumsum(u2)/indices
+            u2_mean = np.cumsum(u2) / indices
             ce = 1.0 / (1.0 - u2_mean) * indices
         elif gamma > 4.0:
             # force computations as longdouble for more precision, but always return np.float
@@ -114,25 +117,26 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
             gamma_m1 = gamma - 1.0
             gamma_m1_inverse = 1.0 / gamma_m1
             u = gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1)
-            u_mean = np.cumsum(u)/indices
+            u_mean = np.cumsum(u) / indices
             ce = 1.0 / (1.0 - gamma_m1 * u_mean) ** gamma_m1_inverse
             ce = (ce * indices).astype(float)
         elif gamma > 1.0:
             gamma_m1 = gamma - 1.0
             gamma_m1_inverse = 1.0 / gamma_m1
             u = gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1)
-            u_mean = np.cumsum(u)/indices
+            u_mean = np.cumsum(u) / indices
             ce = 1.0 / (1.0 - gamma_m1 * u_mean) ** gamma_m1_inverse
             ce = ce * indices
         else:  # general formula
             gamma_1m = 1 - gamma
             u = (cashflows ** gamma_1m - 1.0) / gamma_1m
-            u_mean = np.cumsum(u)/indices
+            u_mean = np.cumsum(u) / indices
             ce = (gamma_1m * u_mean + 1.0) ** (1.0 / gamma_1m)
             ce = ce * indices
         # mortality_adjusted ce cash flows
         madj_ce = np.sum(ce * deathrate)
-        return madj_ce
+        return madj_ce * calibration_factor
+
                                                                                                                         
 class SWRsimulation:
     """simulate retirement outcomes.
@@ -341,7 +345,7 @@ class SWRsimulation:
             survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
                         for trial_dict in self.latest_simulation]
             years_survived_df = pd.DataFrame(data={'nyears': survival},
-                                          index=start_years)
+                                             index=start_years)
 
             fig, axs = plt.subplots(2, figsize=(20, 20))
             axs[0].set_title("Years to Exhaustion by Retirement Year", fontsize=20)
@@ -362,9 +366,8 @@ class SWRsimulation:
         axs[1].plot(portval_df.index, portval_df.mean(axis=1), lw=5, c='black')
         return plt.show()
 
-
     def analyze_plotly(self):
-        start_years = [trial.index[0] for trial_dict in self.latest_simulation]
+        start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
                     for trial_dict in self.latest_simulation]
         years_survived = pd.DataFrame(data={'nyears': survival},
@@ -436,7 +439,7 @@ class SWRsimulation:
                                       index=start_years).reset_index()
 
         return px.bar(years_survived, x="index", y="nyears", color="nyears",
-               hover_name="index", color_continuous_scale="spectral")
+                      hover_name="index", color_continuous_scale="spectral")
 
     def analyze_plotly_express2(self):
 
