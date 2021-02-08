@@ -327,6 +327,10 @@ class SWRsimulation:
             # histogram
             # TODO: add more logic, save return_both and act accordingly
             start_years = [i for i in range(len(self.latest_simulation))]
+
+            mean_spends = [np.mean(trial_dict['trial']['spend'])
+                           for trial_dict in self.latest_simulation]
+            print("mean annual spending over all cohorts %.2f" % np.mean(mean_spends))
             
             survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
                         for trial_dict in self.latest_simulation]
