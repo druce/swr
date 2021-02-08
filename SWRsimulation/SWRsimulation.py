@@ -4,9 +4,9 @@ import pprint
 from dataclasses import dataclass, field
 from typing import List
 
-from plotly import graph_objects as go
-from plotly.subplots import make_subplots
-import plotly.express as px
+# from plotly import graph_objects as go
+# from plotly.subplots import make_subplots
+# import plotly.express as px
 
 # TODO: by default don't keep all trials, only if specified explicitly
 
@@ -37,11 +37,14 @@ def crra_ce(cashflows, gamma):
     """takes a numpy array, returns total CRRA certainty-equivalent cash flow"""
     # for retirement study assume no negative cashflows
 
-    # calibration factor
-    # make the total CE cash flow for Bengen rule == 0.1, to reduce numerical problems
+    # normalize by dividing by mean
+    # we are taking high powers of cash flows so closer to 1 reduces numerical problems
+    # if cash flows vary by factor of 1000 and we take a power of 32 we can run into overflow issues
     # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
     # when utility approaches this limit, small improvements in cash flow don't numerically change utility
-    # otherwise when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
+    # when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
+    # multiply by mean before returning to return same units as input
+
     calibration_factor = np.mean(cashflows)
     cashflows = cashflows/calibration_factor
 
@@ -325,6 +328,10 @@ class SWRsimulation:
             # histogram
             # TODO: add more logic, save return_both and act accordingly
             start_years = [i for i in range(len(self.latest_simulation))]
+
+            mean_spends = [np.mean(trial_dict['trial']['spend'])
+                           for trial_dict in self.latest_simulation]
+            print("mean annual spending over all cohorts %.2f" % np.mean(mean_spends))
             
             survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
                         for trial_dict in self.latest_simulation]
