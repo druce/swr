@@ -341,10 +341,24 @@ class SWRsimulation:
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
 
             fig, axs = plt.subplots(2, figsize=(20, 20))
-            axs[0].set_title("Histogram of Years to Exhaustion (1000 Trials)", fontsize=20)
+
+            mpl_options = {
+                'title': "Histogram of Years to Exhaustion",
+                'title_fontsize': 20,
+                'ylabel': 'Portfolio Years to Exhaustion (Log Scale)',
+                'ylabel_fontsize': 16,
+                'xlabel': 'Retirement Year',
+                'xlabel_fontsize': 16,
+            }
+            # merge from analyze options
+            chart_options = self.analysis.get('chart_1')
+            if chart_options:
+                mpl_options = {**mpl_options, **chart_options}
+
+            axs[0].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
             axs[0].set_yscale('log')
-            axs[0].set_ylabel('Portfolio Years to Exhaustion (Log Scale)', fontsize=16)
-            axs[0].set_xlabel('Retirement Year', fontsize=16)
+            axs[0].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+            axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
             axs[0].bar(bins[1:], c)
 
         else:
@@ -355,10 +369,24 @@ class SWRsimulation:
             years_survived_df = pd.DataFrame(data={'nyears': survival},
                                              index=start_years)
 
+            mpl_options = {
+                'title': "Years to Exhaustion by Retirement Year",
+                'title_fontsize': 20,
+                'ylabel': 'Years to Exhaustion',
+                'ylabel_fontsize': 16,
+                'xlabel': 'Retirement Year',
+                'xlabel_fontsize': 16,
+            }
+
+            # merge from analyze options
+            chart_options = self.analysis.get('chart_1')
+            if chart_options:
+                mpl_options = {**mpl_options, **chart_options}
+            
             fig, axs = plt.subplots(2, figsize=(20, 20))
-            axs[0].set_title("Years to Exhaustion by Retirement Year", fontsize=20)
-            axs[0].set_ylabel('Years to Exhaustion', fontsize=16)
-            axs[0].set_xlabel('Retirement Year', fontsize=16)
+            axs[0].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+            axs[0].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+            axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
             axs[0].bar(years_survived_df.index, years_survived_df['nyears'])
 
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
@@ -366,9 +394,23 @@ class SWRsimulation:
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * 100), portvals]).T,
                                   columns=start_years)
 
-        axs[1].set_title("Portfolio Value by Retirement Year", fontsize=20)
-        axs[1].set_ylabel('Portfolio Value', fontsize=16)
-        axs[1].set_xlabel('Retirement Year', fontsize=16)
+        mpl_options = {
+            'title': "Portfolio Value by Retirement Year",
+            'title_fontsize': 20,
+            'ylabel': 'Portfolio Value',
+            'ylabel_fontsize': 16,
+            'xlabel': 'Retirement Year',
+            'xlabel_fontsize': 16,
+        }
+
+        # merge from analyze options
+        chart_options = self.analysis.get('chart_2')
+        if chart_options:
+            mpl_options = {**mpl_options, **chart_options}
+        
+        axs[1].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        axs[1].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        axs[1].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
         for startyear in start_years:
             axs[1].plot(portval_df.index, portval_df[startyear], alpha=0.2)
         axs[1].plot(portval_df.index, portval_df.mean(axis=1), lw=5, c='black')
