@@ -42,7 +42,7 @@ def crra_ce(cashflows, gamma):
     # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
     # when utility approaches this limit, small improvements in cash flow don't numerically change utility
     # otherwise when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
-    calibration_factor = len(cashflows) * 4 * 10
+    calibration_factor = np.mean(cashflows)
     cashflows = cashflows/calibration_factor
 
     if np.any(np.where(cashflows < 0, 1, 0)):
@@ -93,7 +93,7 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
     if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     else:
-        calibration_factor = len(cashflows) * 4 * 10
+        calibration_factor = np.mean(cashflows)
         cashflows = cashflows / calibration_factor
 
         # 1..lastyear
@@ -332,6 +332,7 @@ class SWRsimulation:
             c, bins = np.histogram(survival, bins=np.linspace(0, 30, 31))
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
+
             fig, axs = plt.subplots(2, figsize=(20, 20))
             axs[0].set_title("Histogram of Years to Exhaustion (1000 Trials)", fontsize=20)
             axs[0].set_yscale('log')
