@@ -419,11 +419,8 @@ class SWRsimulation:
         axs[1].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
         for startyear in start_years:
             axs[1].plot(portval_df.index, portval_df[startyear], alpha=0.2)
-        axs[1].plot(portval_df.index, portval_df.mean(axis=1), lw=5, c='black')
+        axs[1].plot(portval_df.index, portval_df.median(axis=1), lw=5, c='black')
 
-        if mpl_options.get('annotation'):  # if multiplot this is % of whole figure not plot
-            axs[1].annotate(mpl_options.get('annotation'), xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
-            
         return plt.show()
 
     def analyze_plotly(self):
@@ -437,7 +434,7 @@ class SWRsimulation:
         years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals]).T,
                                   columns=years)
-        portval_df['mean'] = portval_df.mean(axis=1)
+        portval_df['median'] = portval_df.median(axis=1)
         portval_df.reset_index(inplace=True)
 
         fig = make_subplots(rows=2, cols=1,
@@ -459,9 +456,9 @@ class SWRsimulation:
                           )
 
         fig.add_trace(go.Scatter(x=portval_df['index'],
-                                 y=portval_df['mean'],
+                                 y=portval_df['median'],
                                  mode='lines',
-                                 name='Mean',
+                                 name='Median',
                                  line={'width': 3, 'color': 'black'},
                                  ),
                       row=2, col=1
@@ -507,7 +504,7 @@ class SWRsimulation:
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals])).transpose()
         col_list = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         portval_df.columns = col_list
-        portval_df['mean'] = portval_df.mean(axis=1)
+        portval_df['median'] = portval_df.median(axis=1)
         portval_df.reset_index(inplace=True)
 
         portval_melt = pd.melt(portval_df, id_vars=['index'], value_vars=col_list)
