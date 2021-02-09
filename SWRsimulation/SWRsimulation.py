@@ -361,6 +361,9 @@ class SWRsimulation:
             axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
             axs[0].bar(bins[1:], c)
 
+            if mpl_options.get('annotation'):
+                axs[0].annotate(mpl_options.get('annotation'), xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
+
         else:
             # bar chart of all simulation outcomes
             start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
@@ -388,6 +391,9 @@ class SWRsimulation:
             axs[0].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
             axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
             axs[0].bar(years_survived_df.index, years_survived_df['nyears'])
+            
+            if mpl_options.get('annotation'):
+                axs[0].annotate(mpl_options.get('annotation'), xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
 
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_rows, portval_cols = portvals.shape
@@ -414,6 +420,10 @@ class SWRsimulation:
         for startyear in start_years:
             axs[1].plot(portval_df.index, portval_df[startyear], alpha=0.2)
         axs[1].plot(portval_df.index, portval_df.mean(axis=1), lw=5, c='black')
+
+        if mpl_options.get('annotation'):  # if multiplot this is % of whole figure not plot
+            axs[1].annotate(mpl_options.get('annotation'), xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
+            
         return plt.show()
 
     def analyze_plotly(self):
