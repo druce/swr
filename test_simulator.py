@@ -44,7 +44,7 @@ def test_zero():
 
     trials = [trial_generator(return_df, 1928, 30)].copy()
 
-    s = SWRsimulation.SWRsimulation({
+    s = SWRsimulation.SWRsimulationCE({
         'simulation': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
@@ -77,7 +77,7 @@ def test_fixed1():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulation({
+    s = SWRsimulation.SWRsimulationCE({
         'simulation': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
@@ -109,7 +109,7 @@ def test_variable1():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulation({
+    s = SWRsimulation.SWRsimulationCE({
         'simulation': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
@@ -145,7 +145,7 @@ def test_fixed2():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulation({
+    s = SWRsimulation.SWRsimulationCE({
         'simulation': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
@@ -177,7 +177,7 @@ def test_variable2():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulation({
+    s = SWRsimulation.SWRsimulationCE({
         'simulation': {'n_ret_years': 30,
                       'n_assets': 2,
                       'trials': trials},
@@ -213,7 +213,7 @@ def test_bengen():
 
     trials = [trial_generator(return_df, 1928, NYEARS)]
 
-    s = SWRsimulation.SWRsimulation({
+    s = SWRsimulation.SWRsimulationCE({
         'simulation': {'n_ret_years': NYEARS,
                       'n_assets': 2,
                       'trials': trials},
@@ -230,3 +230,4 @@ def test_bengen():
     assert z.iloc[0]['spend'] * 1.03 == 4.12, "spend does not match Bengen"
     assert z.iloc[0]['end_port'] * 1.03 == pytest.approx(103.38, 0.000001), "ending port does not match Bengen"
 
+print("running standalone")

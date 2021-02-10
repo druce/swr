@@ -17,7 +17,9 @@ START_PORTVAL = 100.0
 
 @dataclass
 class Trialdata:
-    """Class for keeping track of a latest_trial."""
+    """
+    Class for keeping track of a latest_trial.
+    """
     year: int = 0
     spend: float = 0
     iteration: int = 0
@@ -34,41 +36,65 @@ class Trialdata:
 
 
 def crra_ce(cashflows, gamma):
-    """takes a numpy array, returns total CRRA certainty-equivalent cash flow"""
+    """takes a numpy array, returns total CRRA certainty-equivalent cash flow
+    General formula for CRRA utility of a single cash flow w (wealth): 
+        u = (w ** (1 - gamma) - 1) / (1-gamma)
+    if gamma = 0, u = w
+    if gamma = 1, u is undefined but limit as gamma->1 = log(w)
+    for certainty equivalent of a stream, compute the total utility using specfied gamma,
+    then convert that utility back to a the equivalent constant cash flow stream using that gamma
+    using inverse function
+    gamma <> 1: ce = (1 + u * (1 - gamma)) ** (1 / (1 - gamma))
+    gamma ==1:  ce = exp(u)
+
+    Args:
+        cashflows (numpy.ndarray): array of cashflows
+        gamma (float): risk aversion parameter
+
+    Returns:
+        float: certainty equivalent cashflow
+    """
+    
     # for retirement study assume no negative cashflows
-
-    # normalize by dividing by mean
-    # we are taking high powers of cash flows so closer to 1 reduces numerical problems
-    # if cash flows vary by factor of 1000 and we take a power of 32 we can run into overflow issues
-    # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
-    # when utility approaches this limit, small improvements in cash flow don't numerically change utility
-    # when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
-    # multiply by mean before returning to return same units as input
-
-    calibration_factor = np.mean(cashflows)
-    cashflows = cashflows / calibration_factor
-
     if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     elif gamma >= 1.0 and 0 in cashflows:
         return 0.0
     elif gamma == 1.0:
         # general formula for CRRA utility undefined for test_gamma = 1 but limit as test_gamma->1 = log
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         u = np.mean(np.log(cashflows))
         ce = np.exp(u)
     elif gamma == 2.0:  # simple optimization
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         u2 = np.mean(1 - 1.0 / cashflows)
         ce = 1.0 / (1.0 - u2)
     elif gamma > 4.0:
         # force computations as longdouble for more precision, but always return np.float
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         gamma = np.longdouble(gamma)
         cashflows = cashflows.astype(np.longdouble)
+        # first normalize by dividing by mean
+        # we are taking high powers of cash flows so closer to 1 reduces numerical problems
+        # if cash flows vary by factor of 1000 and we take a power of 32 we can run into overflow issues
+        # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
+        # when utility approaches this limit, small improvements in cash flow don't numerically change utility
+        # when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
+        # multiply by mean before returning to return same units as input
+        calibration_factor = np.mean(cashflows)
+        cashflows /= calibration_factor
         gamma_m1 = gamma - 1.0
         gamma_m1_inverse = 1.0 / gamma_m1
         u = np.mean(gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1))
         ce = 1.0 / (1.0 - gamma_m1 * u) ** gamma_m1_inverse
+        ce *= calibration_factor
         ce = np.float(ce)
     elif gamma > 1.0:
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         gamma_m1 = gamma - 1.0
         gamma_m1_inverse = 1.0 / gamma_m1
         u = np.mean(gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1))
@@ -78,27 +104,34 @@ def crra_ce(cashflows, gamma):
         u = np.mean((cashflows ** g_1m - 1.0) / g_1m)
         ce = (g_1m * u + 1.0) ** (1.0 / g_1m)
 
-    return ce * len(cashflows) * calibration_factor
+    return ce * len(cashflows) 
 
 
 def crra_ce_deathrate(cashflows, gamma, deathrate):
     """ce cash flow with a mortality curve
-    cash flows = real cash flows in each year of cohort
-    test_gamma = risk aversion
-    death rate = % of cohort that died in each year of cohort
-
-    compute utility of each cash flow under test_gamma
-    compute cumulative mean of utilities up to each year
-    convert utilities back to CE cash flows
+    compute certainty-equivalent cash flow up to each year
     each member of cohort that died in a given year experienced CE cash flow * years alive
+    return CE values weighted average using death rate as weights
+    multiply CE values times death rate for each year and sum 
+    # cash flows = 
+    # test_gamma = risk aversion
+    # death rate = % of cohort that died in each year of cohort
+
+
+    Args:
+        cashflows (numpy.ndarray): real cash flows in each year of cohort
+        gamma (float): risk aversion parameter
+        deathrate (numpy.ndarray): % who didn't survive in each year (must sum to 1)
+
+    Returns:
+        float: average CE experienced by cohort members based on the deathrate
     """
+
+    # 
     # for retirement study assume no negative cashflows
     if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     else:
-        calibration_factor = np.mean(cashflows)
-        cashflows = cashflows / calibration_factor
-
         # 1..lastyear
         indices = np.indices(cashflows.shape)[0] + 1
 
@@ -117,11 +150,16 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
             # force computations as longdouble for more precision, but always return np.float
             gamma = np.longdouble(gamma)
             cashflows = cashflows.astype(np.longdouble)
+            # since we are taking large powers, for numerical stability make mean = 1
+            # convert back to input units at the end
+            calibration_factor = np.mean(cashflows)
+            cashflows /= calibration_factor
             gamma_m1 = gamma - 1.0
             gamma_m1_inverse = 1.0 / gamma_m1
             u = gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1)
             u_mean = np.cumsum(u) / indices
             ce = 1.0 / (1.0 - gamma_m1 * u_mean) ** gamma_m1_inverse
+            ce *= calibration_factor            
             ce = (ce * indices).astype(float)
         elif gamma > 1.0:
             gamma_m1 = gamma - 1.0
@@ -138,30 +176,158 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
             ce = ce * indices
         # mortality_adjusted ce cash flows
         madj_ce = np.sum(ce * deathrate)
-        return madj_ce * calibration_factor
+        return madj_ce 
 
-                                                                                                                        
+
 class SWRsimulation:
-    """simulate retirement outcomes.
-
-        Attributes:
-            config: dict with options for simulation, allocation, withdrawal, evaluation
-            simulation['n_ret_years']: number of years of retirement to simulate
-            simulation['n_hist_years']: number of years of historical returns available
-            simulation['n_assets']: number of assets we have returns for
-            simulation['trials']: iterator that yields trials (each an iterator of n_ret_years of asset returns )
-        """
-
+    """abstract base class template for safe withdrawal simulations
+    """
     def __init__(self, config):
-        """pass a dict of config"""
+        """initialize class from a config dict
+
+        Args:
+            config (dict): dict containing at least required keys:
+                {'simulation': {}
+                'allocation': {}
+                'withdrawal': {}
+                'analysis': {}
+            }
+        """
         # promote everything in config to instance variables for more readable code
         self.simulation = config.get('simulation')
+        self.init_simulation()
         self.allocation = config.get('allocation')
+        self.init_allocation()
         self.withdrawal = config.get('withdrawal')
+        self.init_withdrawal()
+        self.evaluation = config.get('evaluation')
         self.analysis = config.get('analysis')
-        self.latest_trial = Trialdata()
-        self.latest_simulation = []  # list of all trials in latest simulation
 
+        self.latest_trial = Trialdata()
+        self.latest_simulation = []  # list of all trial data in latest simulation
+
+    def init_simulation(self):
+        """initialize trial generator eg. historical, monte carlo. prep for next()
+        """
+        pass
+
+    def simulate_trial(self, trial_rows):
+        """simulate a single historical cohort or montecarlo generated cohort
+
+        Args:
+            trial_rows (list or other iterator): asset returns for this cohort trial
+        """
+        pass
+
+    def simulate(self, do_eval=True, return_both=True):
+        """simulate all available cohorts
+
+        Args:
+            do_eval (bool, optional): whether to run eval on each cohort. (Default True)
+            return_both (bool, optional): whether to save both eval and full cohort
+            dataframe in self.latest_simulation. (Default True)
+        """
+        pass
+
+    def init_allocation(self):
+        """set up equal weight, allocation parameters etc. based on simulation config
+        """
+        pass
+
+    def get_allocations(self):
+        """return array of allocations for current simulation iteration based on config, current state
+        """
+        pass
+
+    def init_withdrawal(self):
+        """initialize withdrawal parameters based on simulation config
+        """
+        pass
+
+    def get_withdrawal(self):
+        """return withdrawal amount for current simulation iteration based on config, current state
+        """
+        pass
+
+    def eval_trial(self):
+        """return dict of metrics for a current trial
+        single historical cohort or montecarlo generated cohort
+        eg years to exhaustion, CE adjusted spending
+        """
+        pass
+
+    def analyze(self):
+        """run the analytics and data viz for a completed simulation
+        """
+        pass
+
+    def __repr__(self):
+        """Generate string representation of simulation
+
+        Returns:
+            [string]: string representation
+        """
+        retstr = "Simulation:\n"
+        retstr += pprint.pformat(self.simulation)
+        retstr += "\n\nAllocation:\n"
+        retstr += pprint.pformat(self.allocation)
+        retstr += "\n\nWithdrawal:\n"
+        retstr += pprint.pformat(self.withdrawal)
+        return retstr
+
+
+class SWRsimulationCE(SWRsimulation):
+    """simulate retirement outcomes and evaluate CRRA certainty-equivalent spending using a risk aversion parameter
+
+    Inherits from SWRsimulation ([type])
+
+    Attributes:
+        self.simulation:  dict of simulation configs 
+            'gamma': risk aversion parameter
+            'n_assets': number of assets
+            'n_asset_years': historical asset return years
+            'n_ret_years': retirement years
+            'trials': trial cohort iterator
+            'latest_trial': TrialData for current trial cohort
+            'latest_simulation': list of all data for current simulation
+
+            can create trials iterator using optional configs
+            'returns_df': historical returns dataframe
+            'montecarlo': boolean, use montecarlo to generate trial cohorts (default is historical cohorts)
+            'montecarlo_replacement': do montecarlo with reaplcement
+            'trial_gen': generate trials using a supplied generator function
+        self.allocation: dict of allocation configs
+            'asset_weights': array of fixed weights for assets
+        self.withdrawal: dict of withdrawal configs
+            'fixed_pct': input fixed withdrawal pct
+            'variable_pct': input variable withdrawal pct
+            'fixed': withdrawal in fixed units, initial portfolio * fixed_pct / 100
+            'variable': withdrawal in variable fraction, variable_pct/100
+        self.evaluation: dict of evaluation configs
+            'gamma': risk aversion parameter
+        self.analysis: dict of analysis configs
+            'histogram': bo'olean all return year metrics or histogram of metrics
+            'chart_1', chart_2: matplotlib options for charts
+    """
+
+    def __init__(self, config):
+        """initialize simulation from a config dict
+
+        Args:
+            config (dict): simulation, allocation, withdrawal, analysis keys
+        """
+
+        # promote everything in config to instance variables and call inits
+        super().__init__(config)
+
+    def init_simulation(self):
+        """initialize / reinitialize simulation based on configs
+        make trials ready for next()
+
+        Raises:
+            Exception: bad values
+
+        """
         if 'trials' in self.simulation:
             # iterator passed directly, possibly do additional checks
             pass
@@ -180,41 +346,51 @@ class SWRsimulation:
         else:
             raise Exception("Must config either 'trials' iterator, or 'trial_gen' generator function, or 'returns_df'")
 
-    def __repr__(self):
-        retstr = "Simulation:\n"
-        retstr += pprint.pformat(self.simulation)
-        retstr += "\n\nAllocation:\n"
-        retstr += pprint.pformat(self.allocation)
-        retstr += "\n\nWithdrawal:\n"
-        retstr += pprint.pformat(self.withdrawal)
-        return retstr
+    def init_allocation(self):
+        """initialize for allocation based on configs
+        compute fixed asset weights if not given
+        """
+        if self.allocation.get('asset_weights') is None:
+            # default equal-weighted
+            self.allocation['asset_weights'] = np.ones(self.simulation['n_assets']) / self.simulation['n_assets']
 
     def get_allocations(self):
-        """use provided config or equal-weight allocations"""
-        if self.latest_trial.iteration == 0:
-            if self.allocation.get('asset_weights') is None:
-                # default equal-weighted
-                self.allocation['asset_weights'] = np.ones(self.simulation['n_assets']) / self.simulation['n_assets']
+        """ return default allocation
 
+        Returns:
+            numpy.ndarray: asset weights for this iteration
+        """
         return self.allocation['asset_weights']
 
-    def get_spend(self):
-        """fixed + variable based on config"""
-        if self.latest_trial.iteration == 0:
-            # set defaults
-            if self.withdrawal.get('variable_pct') is None:
-                self.withdrawal['variable_pct'] = 0.0
-            if self.withdrawal.get('fixed_pct') is None:
-                self.withdrawal['fixed_pct'] = 0.0
-            # initialize withdrawal parameters
-            self.withdrawal['variable'] = self.withdrawal['variable_pct'] / 100
-            self.withdrawal['fixed'] = self.withdrawal['fixed_pct'] / 100 * START_PORTVAL
+    def init_withdrawal(self):
+        """initialize for withdrawal based on configs
+        compute variable and fixed fractions
+        """
 
+        if self.withdrawal.get('variable_pct') is None:
+            self.withdrawal['variable_pct'] = 0.0
+        if self.withdrawal.get('fixed_pct') is None:
+            self.withdrawal['fixed_pct'] = 0.0
+        # initialize withdrawal parameters
+        self.withdrawal['variable'] = self.withdrawal['variable_pct'] / 100
+        self.withdrawal['fixed'] = self.withdrawal['fixed_pct'] / 100 * START_PORTVAL
+
+    def get_withdrawal(self):
+        """return withdrawal for current iteration
+        fixed + variable based on config and current iteration state
+
+        Returns:
+            float: withdrawal for current iteration
+        """
         portval = self.latest_trial.portval
         return portval * self.withdrawal['variable'] + self.withdrawal['fixed']
 
     def eval_exhaustion(self):
-        """which year portfolio is exhausted, or n_ret_years if never exhausted"""
+        """exhaustion metric for current trial
+
+        Returns:
+            float: years to exhaustion for current trial
+        """
         min_end_port_index = int(np.argmin(self.latest_trial.end_ports))
         min_end_port_value = self.latest_trial.end_ports[min_end_port_index]
         if min_end_port_value == 0.0:
@@ -223,22 +399,42 @@ class SWRsimulation:
             return self.simulation['n_ret_years']
 
     def eval_ce(self):
-        return crra_ce(self.latest_trial.trial_df['spend'], 0)
+        """certainty-equivalent metric for current trial
+
+        Returns:
+            float: CE cash flow for spending in current trial
+        """
+        return crra_ce(self.latest_trial.trial_df['spend'], self.evaluation['gamma'])
     
     def eval_trial(self):
-        
+        """compute all metrics and return in dict
+
+        Returns:
+            dict: key = name of metric, value = metric
+        """
         return {'years_to_exhaustion': self.eval_exhaustion(),
                 'ce_spend': self.eval_ce()}
     
     def historical_trial_generator(self, start_year):
-        """generate asset returns for 1 latest_trial, n_ret_years long, given a dataframe of returns, starting year"""
+        """generate asset returns for 1 latest_trial, n_ret_years long, given a dataframe of returns, starting year
+
+        Args:
+            start_year (int): index of starting trial
+
+        Yields:
+            tuple: named tuple of asset return for each asset for each year for n_ret_years starting from start_year
+        """
         df = self.simulation['returns_df']
         n_ret_years = self.simulation['n_ret_years']
         for t in df.loc[start_year:start_year + n_ret_years - 1].itertuples():
             yield tuple(t)
 
     def historical_trials(self):
-        """generate all available n_ret_years historical trials """
+        """generate all available n_ret_years historical trials
+
+        Yields:
+            iterator: for each historical starting retirement year, iterator of all years in retirement cohort
+        """
         df = self.simulation['returns_df']
         first_year = df.index[0]
         last_year = df.index[-1] - self.simulation['n_ret_years'] + 1
@@ -247,7 +443,15 @@ class SWRsimulation:
             yield self.historical_trial_generator(year)
 
     def montecarlo_trial_generator(self, replace=False):
-        """generate 1 latest_trial, n_years long, by sampling randomly from returns"""
+        """generate 1 trial cohort, n_ret_years long, by sampling randomly from returns
+
+        Args:
+            replace (bool, optional): sample with replacement. Defaults to False.
+
+        Yields:
+            tuple: named tuple of asset returns for each year sampled for n_ret_years
+        """
+
         df = self.simulation['returns_df']
         n_ret_years = self.simulation['n_ret_years']
         sample = np.random.choice(len(df), n_ret_years, replace=replace)
@@ -255,13 +459,31 @@ class SWRsimulation:
             yield tuple(t)
 
     def montecarlo_trials(self, n_trials, replace=False):
-        """generate n_trials trials, each n_years long, by sampling randomly"""
+        """generate n_trials trials, each n_years long, by sampling randomly
+
+
+        Args:
+            n_trials (int): number of montecarlo cohorts
+            replace (bool, optional): sample with replacement. Defaults to False.
+
+        Yields:
+            iterator: montecarlo_generator, a single cohort iterator
+        """
+
         for i in range(n_trials):
             yield self.montecarlo_trial_generator(replace=replace)
 
     def simulate(self, do_eval=True, return_both=True):
-        """simulate many trials, return a list of latest_trial dataframes and/or optional evaluation metrics"""
+        """simulate many trials, return a list of latest_trial dataframes and/or optional evaluation metrics
 
+        Args:
+            do_eval (bool, optional): run evals for each cohort. Defaults to True.
+            return_both (bool, optional): keep both eval metric dict and outocome df for each cohort. 
+            Defaults to True.
+
+        Returns:
+            list: latest_simulation, list of metrics and/or trial dataframe for each cohort
+        """
         self.latest_simulation = []
 
         for trial in self.simulation['trials']:
@@ -282,7 +504,14 @@ class SWRsimulation:
         return self.latest_simulation
 
     def simulate_trial(self, trial_rows):
-        """simulate a single latest_trial"""
+        """Simulate a single trial cohort, given asset returns iterator
+
+        Args:
+            trial_rows (list or iterator): asset returns for each year
+
+        Returns:
+            pandas dataframe: dataframe of trial outcomes by year
+        """
 
         self.latest_trial = Trialdata()
         current_trial = self.latest_trial
@@ -302,7 +531,7 @@ class SWRsimulation:
             current_trial.portval *= (1 + port_return)
             current_trial.before_spends.append(current_trial.portval)
 
-            current_trial.spend = self.get_spend()  # desired spend
+            current_trial.spend = self.get_withdrawal()  # desired spend
             current_trial.spend = min(current_trial.spend, current_trial.portval)  # actual spend
             current_trial.spends.append(current_trial.spend)
 
@@ -323,6 +552,11 @@ class SWRsimulation:
         return current_trial.trial_df
 
     def analyze(self):
+        """display metrics and dataviz for the current simulation with matplotlib
+
+        Returns:
+            matplotlib chart object: charts
+        """
 
         if len(self.latest_simulation) > 100 or self.analysis.get('histogram'):
             # histogram
@@ -362,7 +596,8 @@ class SWRsimulation:
             axs[0].bar(bins[1:], c)
 
             if mpl_options.get('annotation'):
-                axs[0].annotate(mpl_options.get('annotation'), xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
+                axs[0].annotate(mpl_options.get('annotation'),
+                                xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
 
         else:
             # bar chart of all simulation outcomes
@@ -393,7 +628,8 @@ class SWRsimulation:
             axs[0].bar(years_survived_df.index, years_survived_df['nyears'])
             
             if mpl_options.get('annotation'):
-                axs[0].annotate(mpl_options.get('annotation'), xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
+                axs[0].annotate(mpl_options.get('annotation'),
+                                xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
 
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_rows, portval_cols = portvals.shape
@@ -424,6 +660,12 @@ class SWRsimulation:
         return plt.show()
 
     def analyze_plotly(self):
+        """display metrics and dataviz for the current simulation with plotly
+
+        Returns:
+            Plotly chart object: chart
+        """
+
         start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
                     for trial_dict in self.latest_simulation]
@@ -488,7 +730,11 @@ class SWRsimulation:
         return fig
 
     def analyze_plotly_express(self):
-        """output px survival and port value charts"""
+        """display metrics and dataviz for the current simulation
+
+        Returns:
+            Plotly Express chart object: chart
+        """
         start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         survival = [self.simulation['n_ret_years'] - len(np.where(trial_dict['trial']['spend'].values == 0.0))
                     for trial_dict in self.latest_simulation]
@@ -499,7 +745,11 @@ class SWRsimulation:
                       hover_name="index", color_continuous_scale="spectral")
 
     def analyze_plotly_express2(self):
+        """display metrics and dataviz for the current simulation
 
+        Returns:
+            Plotly Express chart object: chart
+        """
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals])).transpose()
         col_list = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
