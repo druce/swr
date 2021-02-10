@@ -46,7 +46,7 @@ def crra_ce(cashflows, gamma):
     # multiply by mean before returning to return same units as input
 
     calibration_factor = np.mean(cashflows)
-    cashflows = cashflows/calibration_factor
+    cashflows = cashflows / calibration_factor
 
     if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
