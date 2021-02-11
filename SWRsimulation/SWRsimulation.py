@@ -307,7 +307,7 @@ class SWRsimulationCE(SWRsimulation):
             'gamma': risk aversion parameter
         self.analysis: dict of analysis configs
             'histogram': bo'olean all return year metrics or histogram of metrics
-            'chart_1', chart_2: matplotlib options for charts
+            'chart_1', 'chart_2', 'chart_3': matplotlib options for charts
     """
 
     def __init__(self, config):
@@ -365,25 +365,37 @@ class SWRsimulationCE(SWRsimulation):
     def init_withdrawal(self):
         """initialize for withdrawal based on configs
         compute variable and fixed fractions
+        set smoothing factor (default=1)
         """
 
+        # initialize withdrawal parameters
         if self.withdrawal.get('variable_pct') is None:
             self.withdrawal['variable_pct'] = 0.0
         if self.withdrawal.get('fixed_pct') is None:
             self.withdrawal['fixed_pct'] = 0.0
-        # initialize withdrawal parameters
         self.withdrawal['variable'] = self.withdrawal['variable_pct'] / 100
         self.withdrawal['fixed'] = self.withdrawal['fixed_pct'] / 100 * START_PORTVAL
 
+        # initialize smoothing parameter (disabled)
+        # if self.withdrawal.get('smoothing_factor') is None:
+        #     self.withdrawal['smoothing_factor'] = 1.0
+        
     def get_withdrawal(self):
         """return withdrawal for current iteration
-        fixed + variable based on config and current iteration state
+        compute desired withdrawal based on config and current iteration state (fixed + variable)
+        return min(desired, EMA(smoothing_factor)
 
         Returns:
             float: withdrawal for current iteration
         """
         portval = self.latest_trial.portval
-        return portval * self.withdrawal['variable'] + self.withdrawal['fixed']
+        desired_withdrawal = portval * self.withdrawal['variable'] + self.withdrawal['fixed']
+        # smoothing factor (doesn't improve outcomes)
+        # if self.latest_trial.spends:
+        #     previous_withdrawal = self.latest_trial.spends[-1]
+        #     smoothed_withdrawal = previous_withdrawal + (desired_withdrawal - previous_withdrawal)/self.withdrawal['smoothing_factor']
+        #     desired_withdrawal = min(desired_withdrawal, smoothed_withdrawal)
+        return desired_withdrawal
 
     def eval_exhaustion(self):
         """exhaustion metric for current trial
@@ -406,6 +418,22 @@ class SWRsimulationCE(SWRsimulation):
         """
         return crra_ce(self.latest_trial.trial_df['spend'], self.evaluation['gamma'])
     
+    def eval_median_spend(self):
+        """median spend metric for current trial
+
+        Returns:
+            float: Median real spending current trial
+        """
+        return self.latest_trial.trial_df['spend'].median()
+    
+    def eval_mean_spend(self):
+        """median spend metric for current trial
+
+        Returns:
+            float: Median real spending current trial
+        """
+        return self.latest_trial.trial_df['spend'].mean()
+    
     def eval_trial(self):
         """compute all metrics and return in dict
 
@@ -413,7 +441,10 @@ class SWRsimulationCE(SWRsimulation):
             dict: key = name of metric, value = metric
         """
         return {'years_to_exhaustion': self.eval_exhaustion(),
-                'ce_spend': self.eval_ce()}
+                'ce_spend': self.eval_ce(),
+                'median_spend': self.eval_median_spend(),
+                'mean_spend': self.eval_mean_spend(),
+        }
     
     def historical_trial_generator(self, start_year):
         """generate asset returns for 1 latest_trial, n_ret_years long, given a dataframe of returns, starting year
@@ -574,7 +605,7 @@ class SWRsimulationCE(SWRsimulation):
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
 
-            fig, axs = plt.subplots(3, figsize=(60, 20))
+            fig, axs = plt.subplots(3, figsize=(20, 30))
 
             mpl_options = {
                 'title': "Histogram of Years to Exhaustion",
@@ -597,7 +628,7 @@ class SWRsimulationCE(SWRsimulation):
 
             if mpl_options.get('annotation'):
                 axs[0].annotate(mpl_options.get('annotation'),
-                                xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
+                                xy=(0.073, 0.925), xycoords='figure fraction', fontsize=14)
 
         else:
             # bar chart of all simulation outcomes
