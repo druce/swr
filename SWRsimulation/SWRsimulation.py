@@ -574,7 +574,7 @@ class SWRsimulationCE(SWRsimulation):
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
 
-            fig, axs = plt.subplots(2, figsize=(20, 20))
+            fig, axs = plt.subplots(3, figsize=(60, 20))
 
             mpl_options = {
                 'title': "Histogram of Years to Exhaustion",
@@ -631,6 +631,34 @@ class SWRsimulationCE(SWRsimulation):
                 axs[0].annotate(mpl_options.get('annotation'),
                                 xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
 
+        #####
+        spends = np.array([trial_dict['trial']['spend'].values for trial_dict in self.latest_simulation])
+        spend_rows, spend_cols = spends.shape
+        spend_df = pd.DataFrame(data=spends.T,
+                                columns=start_years)
+
+        mpl_options = {
+            'title': "Spending by Retirement Year",
+            'title_fontsize': 20,
+            'ylabel': 'Spending',
+            'ylabel_fontsize': 16,
+            'xlabel': 'Retirement Year',
+            'xlabel_fontsize': 16,
+        }
+
+        # merge from analyze options
+        chart_options = self.analysis.get('chart_2')
+        if chart_options:
+            mpl_options = {**mpl_options, **chart_options}
+        
+        axs[1].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        axs[1].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        axs[1].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        for startyear in start_years:
+            axs[1].plot(spend_df.index, spend_df[startyear], alpha=0.2)
+        axs[1].plot(spend_df.index, spend_df.median(axis=1), lw=5, c='black')
+
+        #####
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_rows, portval_cols = portvals.shape
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * 100), portvals]).T,
@@ -646,17 +674,17 @@ class SWRsimulationCE(SWRsimulation):
         }
 
         # merge from analyze options
-        chart_options = self.analysis.get('chart_2')
+        chart_options = self.analysis.get('chart_3')
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
         
-        axs[1].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
-        axs[1].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
-        axs[1].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        axs[2].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        axs[2].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        axs[2].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
         for startyear in start_years:
-            axs[1].plot(portval_df.index, portval_df[startyear], alpha=0.2)
-        axs[1].plot(portval_df.index, portval_df.median(axis=1), lw=5, c='black')
-
+            axs[2].plot(portval_df.index, portval_df[startyear], alpha=0.2)
+        axs[2].plot(portval_df.index, portval_df.median(axis=1), lw=5, c='black')
+        
         return plt.show()
 
     def analyze_plotly(self):
