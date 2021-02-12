@@ -4,8 +4,7 @@
 # pytest -q test_crra.py
 import pytest
 import numpy as np
-from SWRsimulation.SWRsimulation import crra_ce, crra_ce_deathrate
-
+from SWRsimulation.crra_ce import crra_ce, crra_ce_deathrate
 
 def test_zero():
     testseries = np.random.uniform(1, 100, 100)

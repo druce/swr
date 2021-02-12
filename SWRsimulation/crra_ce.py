@@ -1,40 +1,65 @@
 import numpy as np
-import pytest
-
 
 def crra_ce(cashflows, gamma):
-    """takes a numpy array, returns total CRRA certainty-equivalent cash flow"""
+    """takes a numpy array, returns total CRRA certainty-equivalent cash flow
+    General formula for CRRA utility of a single cash flow w (wealth): 
+        u = (w ** (1 - gamma) - 1) / (1-gamma)
+    if gamma = 0, u = w
+    if gamma = 1, u is undefined but limit as gamma->1 = log(w)
+    for certainty equivalent of a stream, compute the total utility using specfied gamma,
+    then convert that utility back to a the equivalent constant cash flow stream using that gamma
+    using inverse function
+    gamma <> 1: ce = (1 + u * (1 - gamma)) ** (1 / (1 - gamma))
+    gamma ==1:  ce = exp(u)
+
+    Args:
+        cashflows (numpy.ndarray): array of cashflows
+        gamma (float): risk aversion parameter
+
+    Returns:
+        float: certainty equivalent cashflow
+    """
+    
     # for retirement study assume no negative cashflows
-
-    # calibration factor
-    # make the total CE cash flow for Bengen rule == 0.1, to reduce numerical problems
-    # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
-    # when utility approaches this limit, small improvements in cash flow don't numerically change utility
-    # otherwise when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
-    calibration_factor = len(cashflows) * 4 * 10
-    cashflows = cashflows/calibration_factor
-
     if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     elif gamma >= 1.0 and 0 in cashflows:
         return 0.0
     elif gamma == 1.0:
         # general formula for CRRA utility undefined for test_gamma = 1 but limit as test_gamma->1 = log
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         u = np.mean(np.log(cashflows))
         ce = np.exp(u)
     elif gamma == 2.0:  # simple optimization
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         u2 = np.mean(1 - 1.0 / cashflows)
         ce = 1.0 / (1.0 - u2)
     elif gamma > 4.0:
         # force computations as longdouble for more precision, but always return np.float
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         gamma = np.longdouble(gamma)
         cashflows = cashflows.astype(np.longdouble)
+        # first normalize by dividing by mean
+        # we are taking high powers of cash flows so closer to 1 reduces numerical problems
+        # if cash flows vary by factor of 1000 and we take a power of 32 we can run into overflow issues
+        # for gamma > 1, there is an upper bound to utility 1/(gamma-1)
+        # when utility approaches this limit, small improvements in cash flow don't numerically change utility
+        # when you multiply cash flow by a factor, CE cash flow is multiplied by same factor
+        # multiply by mean before returning to return same units as input
+        calibration_factor = np.mean(cashflows)
+        cashflows /= calibration_factor
         gamma_m1 = gamma - 1.0
         gamma_m1_inverse = 1.0 / gamma_m1
         u = np.mean(gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1))
         ce = 1.0 / (1.0 - gamma_m1 * u) ** gamma_m1_inverse
+        ce *= calibration_factor
         ce = np.float(ce)
     elif gamma > 1.0:
+        if np.any(np.where(cashflows == 0, 1, 0)):
+            return 0.0
         gamma_m1 = gamma - 1.0
         gamma_m1_inverse = 1.0 / gamma_m1
         u = np.mean(gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1))
@@ -44,27 +69,34 @@ def crra_ce(cashflows, gamma):
         u = np.mean((cashflows ** g_1m - 1.0) / g_1m)
         ce = (g_1m * u + 1.0) ** (1.0 / g_1m)
 
-    return ce * len(cashflows) * calibration_factor
+    return ce * len(cashflows) 
 
 
 def crra_ce_deathrate(cashflows, gamma, deathrate):
     """ce cash flow with a mortality curve
-    cash flows = real cash flows in each year of cohort
-    test_gamma = risk aversion
-    death rate = % of cohort that died in each year of cohort
-
-    compute utility of each cash flow under test_gamma
-    compute cumulative mean of utilities up to each year
-    convert utilities back to CE cash flows
+    compute certainty-equivalent cash flow up to each year
     each member of cohort that died in a given year experienced CE cash flow * years alive
+    return CE values weighted average using death rate as weights
+    multiply CE values times death rate for each year and sum 
+    # cash flows = 
+    # test_gamma = risk aversion
+    # death rate = % of cohort that died in each year of cohort
+
+
+    Args:
+        cashflows (numpy.ndarray): real cash flows in each year of cohort
+        gamma (float): risk aversion parameter
+        deathrate (numpy.ndarray): % who didn't survive in each year (must sum to 1)
+
+    Returns:
+        float: average CE experienced by cohort members based on the deathrate
     """
+
+    # 
     # for retirement study assume no negative cashflows
     if np.any(np.where(cashflows < 0, 1, 0)):
         return 0.0
     else:
-        calibration_factor = len(cashflows) * 4 * 10
-        cashflows = cashflows / calibration_factor
-
         # 1..lastyear
         indices = np.indices(cashflows.shape)[0] + 1
 
@@ -83,11 +115,16 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
             # force computations as longdouble for more precision, but always return np.float
             gamma = np.longdouble(gamma)
             cashflows = cashflows.astype(np.longdouble)
+            # since we are taking large powers, for numerical stability make mean = 1
+            # convert back to input units at the end
+            calibration_factor = np.mean(cashflows)
+            cashflows /= calibration_factor
             gamma_m1 = gamma - 1.0
             gamma_m1_inverse = 1.0 / gamma_m1
             u = gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1)
             u_mean = np.cumsum(u) / indices
             ce = 1.0 / (1.0 - gamma_m1 * u_mean) ** gamma_m1_inverse
+            ce *= calibration_factor            
             ce = (ce * indices).astype(float)
         elif gamma > 1.0:
             gamma_m1 = gamma - 1.0
@@ -104,51 +141,8 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
             ce = ce * indices
         # mortality_adjusted ce cash flows
         madj_ce = np.sum(ce * deathrate)
-        return madj_ce * calibration_factor
-
-
-def general_ce(cashflows, gamma):
-    cashflows = np.longdouble(cashflows)
-    calibration_factor = np.sum(cashflows) * 10
-    cashflows /= calibration_factor
-
-    if gamma == 1:
-        u = np.mean(np.log(cashflows))
-        ce = np.exp(u)
-    else:
-        u = np.mean((cashflows ** (1 - gamma) - 1) / (1 - gamma))
-        ce = (1 + u * (1 - gamma)) ** (1 / (1 - gamma))
-    ce = np.float(ce)
-    return ce * len(cashflows) * calibration_factor
+        return madj_ce 
 
 
 if __name__ == '__main__':
-    print('Executing as standalone script, running tests')
-    # test 0 and -1
-    testseries = np.random.uniform(1, 100, 100)
-    testseries[50] = 0.0
-    assert crra_ce(testseries, 1) == 0, "bad value"
-    testseries[50] = -1.0
-    assert crra_ce(testseries, 1) == 0, "bad value"
-
-    # a constant series should always be sum of cash flows for any test_gamma
-    testseries = np.ones(100)
-    for test_gamma in [0, 0.5, 1, 2, 4, 8, 16]:
-        print(test_gamma, crra_ce(testseries, test_gamma))
-        assert crra_ce(testseries, test_gamma) == np.sum(testseries)
-
-    testseries = np.random.uniform(1, 100, 100)
-
-    # can't go to 16 without some numerical problems
-    for test_gamma in [0, 0.5, 1, 2, 4, 8, 16]:
-        print(test_gamma, crra_ce(testseries, test_gamma), general_ce(testseries, test_gamma))
-        assert crra_ce(testseries, test_gamma) == pytest.approx(general_ce(testseries, test_gamma), 0.000001)
-
-    # if everyone dies in last year, mortality-adjusted CE = unadjusted CE
-    test_deathrate = np.zeros(100)
-    test_deathrate[99] = 1.0
-
-    # can't go to 16 without some numerical problems
-    for test_gamma in [0, 0.5, 1, 2, 4, 8, 10]:
-        print(test_gamma, crra_ce(testseries, test_gamma), crra_ce_deathrate(testseries, test_gamma, test_deathrate))
-        assert crra_ce(testseries, test_gamma) == pytest.approx(general_ce(testseries, test_gamma), 0.000001)
+    print('Executing as standalone script')

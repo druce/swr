@@ -2,13 +2,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from plotly import graph_objects as go
-from plotly.subplots import make_subplots
-import plotly.express as px
+# from plotly import graph_objects as go
+# from plotly.subplots import make_subplots
+# import plotly.express as px
 
-import SWRsimulation
-from SWRsimulation import START_PORTVAL, Trialdata
-from crra_ce import crra_ce
+from .SWRsimulation import SWRsimulation,  START_PORTVAL, Trialdata
+from .crra_ce import crra_ce
 
 
 class SWRsimulationCE(SWRsimulation):
