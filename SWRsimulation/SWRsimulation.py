@@ -190,7 +190,7 @@ class SWRsimulation:
                 {'simulation': {}
                 'allocation': {}
                 'withdrawal': {}
-                'analysis': {}
+                'visualization': {}
             }
         """
         # promote everything in config to instance variables for more readable code
@@ -201,7 +201,7 @@ class SWRsimulation:
         self.withdrawal = config.get('withdrawal')
         self.init_withdrawal()
         self.evaluation = config.get('evaluation')
-        self.analysis = config.get('analysis')
+        self.visualization = config.get('visualization')
 
         self.latest_trial = Trialdata()
         self.latest_simulation = []  # list of all trial data in latest simulation
@@ -256,7 +256,7 @@ class SWRsimulation:
         """
         pass
 
-    def analyze(self):
+    def visualize(self):
         """run the analytics and data viz for a completed simulation
         """
         pass
@@ -305,7 +305,7 @@ class SWRsimulationCE(SWRsimulation):
             'variable': withdrawal in variable fraction, variable_pct/100
         self.evaluation: dict of evaluation configs
             'gamma': risk aversion parameter
-        self.analysis: dict of analysis configs
+        self.visualization: dict of visualization configs
             'histogram': bo'olean all return year metrics or histogram of metrics
             'chart_1', 'chart_2', 'chart_3': matplotlib options for charts
     """
@@ -314,7 +314,7 @@ class SWRsimulationCE(SWRsimulation):
         """initialize simulation from a config dict
 
         Args:
-            config (dict): simulation, allocation, withdrawal, analysis keys
+            config (dict): simulation, allocation, withdrawal, visualization keys
         """
 
         # promote everything in config to instance variables and call inits
@@ -582,14 +582,14 @@ class SWRsimulationCE(SWRsimulation):
         current_trial.trial_df = pd.concat([ret_df, alloc_df], axis=1)
         return current_trial.trial_df
 
-    def analyze(self):
+    def visualize(self):
         """display metrics and dataviz for the current simulation with matplotlib
 
         Returns:
             matplotlib chart object: charts
         """
 
-        if len(self.latest_simulation) > 100 or self.analysis.get('histogram'):
+        if len(self.latest_simulation) > 100 or self.visualization.get('histogram'):
             # histogram
             # TODO: add more logic, save return_both and act accordingly
             start_years = [i for i in range(len(self.latest_simulation))]
@@ -615,8 +615,8 @@ class SWRsimulationCE(SWRsimulation):
                 'xlabel': 'Retirement Year',
                 'xlabel_fontsize': 16,
             }
-            # merge from analyze options
-            chart_options = self.analysis.get('chart_1')
+            # merge from visualize options
+            chart_options = self.visualization.get('chart_1')
             if chart_options:
                 mpl_options = {**mpl_options, **chart_options}
 
@@ -647,8 +647,8 @@ class SWRsimulationCE(SWRsimulation):
                 'xlabel_fontsize': 16,
             }
 
-            # merge from analyze options
-            chart_options = self.analysis.get('chart_1')
+            # merge from visualize options
+            chart_options = self.visualization.get('chart_1')
             if chart_options:
                 mpl_options = {**mpl_options, **chart_options}
             
@@ -677,8 +677,8 @@ class SWRsimulationCE(SWRsimulation):
             'xlabel_fontsize': 16,
         }
 
-        # merge from analyze options
-        chart_options = self.analysis.get('chart_2')
+        # merge from visualize options
+        chart_options = self.visualization.get('chart_2')
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
         
@@ -704,8 +704,8 @@ class SWRsimulationCE(SWRsimulation):
             'xlabel_fontsize': 16,
         }
 
-        # merge from analyze options
-        chart_options = self.analysis.get('chart_3')
+        # merge from visualize options
+        chart_options = self.visualization.get('chart_3')
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
         
@@ -718,7 +718,7 @@ class SWRsimulationCE(SWRsimulation):
         
         return plt.show()
 
-    def analyze_plotly(self):
+    def visualize_plotly(self):
         """display metrics and dataviz for the current simulation with plotly
 
         Returns:
@@ -788,7 +788,7 @@ class SWRsimulationCE(SWRsimulation):
 
         return fig
 
-    def analyze_plotly_express(self):
+    def visualize_plotly_express(self):
         """display metrics and dataviz for the current simulation
 
         Returns:
@@ -803,7 +803,7 @@ class SWRsimulationCE(SWRsimulation):
         return px.bar(years_survived, x="index", y="nyears", color="nyears",
                       hover_name="index", color_continuous_scale="spectral")
 
-    def analyze_plotly_express2(self):
+    def visualize_plotly_express2(self):
         """display metrics and dataviz for the current simulation
 
         Returns:
