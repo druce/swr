@@ -159,7 +159,7 @@ class SWRsimulationCE(SWRsimulation):
         """median spend metric for current trial
 
         Returns:
-            float: Median real spending current trial
+            float: Median real spending for current trial
         """
         return self.latest_trial.trial_df['spend'].median()
     
@@ -167,9 +167,33 @@ class SWRsimulationCE(SWRsimulation):
         """median spend metric for current trial
 
         Returns:
-            float: Median real spending current trial
+            float: Mean real spending for current trial
         """
         return self.latest_trial.trial_df['spend'].mean()
+    
+    def eval_min_spend(self):
+        """minimum spend metric for current trial
+
+        Returns:
+            float: Minimum real spending for current trial
+        """
+        return self.latest_trial.trial_df['spend'].min()
+    
+    def eval_max_spend(self):
+        """maximum spend metric for current trial
+
+        Returns:
+            float: Maximum real spending for current trial
+        """
+        return self.latest_trial.trial_df['spend'].max()
+    
+    def eval_sd_spend(self):
+        """standard deviation of spend metric for current trial
+
+        Returns:
+            float: standard deviation of real spending for current trial
+        """
+        return self.latest_trial.trial_df['spend'].std()
     
     def eval_trial(self):
         """compute all metrics and return in dict
@@ -181,6 +205,9 @@ class SWRsimulationCE(SWRsimulation):
                 'ce_spend': self.eval_ce(),
                 'median_spend': self.eval_median_spend(),
                 'mean_spend': self.eval_mean_spend(),
+                'min_spend': self.eval_min_spend(),
+                'max_spend': self.eval_max_spend(),
+                'sd_spend': self.eval_sd_spend(),
                 }
     
     def historical_trial_generator(self, start_year):
