@@ -1,3 +1,16 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from plotly import graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
+
+import SWRsimulation
+from SWRsimulation import START_PORTVAL, Trialdata
+from crra_ce import crra_ce
+
+
 class SWRsimulationCE(SWRsimulation):
     """simulate retirement outcomes and evaluate CRRA certainty-equivalent spending using a risk aversion parameter
 
@@ -41,6 +54,9 @@ class SWRsimulationCE(SWRsimulation):
 
         # promote everything in config to instance variables and call inits
         super().__init__(config)
+
+        self.latest_trial = Trialdata()
+        self.latest_simulation = []  # list of all trial data in latest simulation
 
     def init_simulation(self):
         """initialize / reinitialize simulation based on configs
@@ -166,7 +182,7 @@ class SWRsimulationCE(SWRsimulation):
                 'ce_spend': self.eval_ce(),
                 'median_spend': self.eval_median_spend(),
                 'mean_spend': self.eval_mean_spend(),
-        }
+                }
     
     def historical_trial_generator(self, start_year):
         """generate asset returns for 1 latest_trial, n_ret_years long, given a dataframe of returns, starting year
@@ -386,7 +402,6 @@ class SWRsimulationCE(SWRsimulation):
 
         #####
         spends = np.array([trial_dict['trial']['spend'].values for trial_dict in self.latest_simulation])
-        spend_rows, spend_cols = spends.shape
         spend_df = pd.DataFrame(data=spends.T,
                                 columns=start_years)
 
