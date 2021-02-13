@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from matplotlib import cm
+import pdb
 # from plotly import graph_objects as go
 # from plotly.subplots import make_subplots
 # import plotly.express as px
@@ -358,10 +359,14 @@ class SWRsimulationCE(SWRsimulation):
             # TODO: add more logic, save return_both and act accordingly
             start_years = [i for i in range(len(self.latest_simulation))]
 
-            mean_spends = [np.mean(trial_dict['trial']['spend'])
+            mean_spends = [trial_dict['mean_spend']
                            for trial_dict in self.latest_simulation]
             print("mean annual spending over all cohorts %.2f" % np.mean(mean_spends))
-            
+
+            min_spends = [trial_dict['min_spend']
+                          for trial_dict in self.latest_simulation]
+            print("minimum annual spending over all cohorts %.2f" % np.min(mean_spends))
+
             survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
                         for trial_dict in self.latest_simulation]
 
@@ -388,11 +393,12 @@ class SWRsimulationCE(SWRsimulation):
             axs[0].set_yscale('log')
             axs[0].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
             axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+            axs[0].tick_params(axis='both', labelsize=16, )
             axs[0].bar(bins[1:], c)
 
             if mpl_options.get('annotation'):
                 axs[0].annotate(mpl_options.get('annotation'),
-                                xy=(0.073, 0.925), xycoords='figure fraction', fontsize=14)
+                                xy=(0.073, 0.925), xycoords='figure fraction', fontsize=16)
 
         else:
             # bar chart of all simulation outcomes
@@ -416,17 +422,17 @@ class SWRsimulationCE(SWRsimulation):
             if chart_options:
                 mpl_options = {**mpl_options, **chart_options}
             
-            fig, axs = plt.subplots(2, figsize=(20, 20))
             axs[0].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
             axs[0].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
             axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+            axs[0].tick_params(axis='both', labelsize=16, )
             axs[0].bar(years_survived_df.index, years_survived_df['nyears'])
-            
+
             if mpl_options.get('annotation'):
                 axs[0].annotate(mpl_options.get('annotation'),
-                                xy=(0.073, 0.92), xycoords='figure fraction', fontsize=14)
+                                xy=(0.073, 0.92), xycoords='figure fraction', fontsize=16)
 
-        #####
+        ######
         spends = np.array([trial_dict['trial']['spend'].values for trial_dict in self.latest_simulation])
         spend_df = pd.DataFrame(data=spends.T,
                                 columns=start_years)
@@ -448,9 +454,20 @@ class SWRsimulationCE(SWRsimulation):
         axs[1].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
         axs[1].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
         axs[1].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
-        for startyear in start_years:
-            axs[1].plot(spend_df.index, spend_df[startyear], alpha=0.2)
-        axs[1].plot(spend_df.index, spend_df.median(axis=1), lw=5, c='black')
+        axs[1].tick_params(axis='both', labelsize=16, )
+
+        # color by ending spend
+        ending_vals = spend_df.values[-1, :].copy()
+        ending_vals /= np.max(ending_vals)
+        colors = [cm.plasma(x) for x in ending_vals]
+        
+        for i, startyear in enumerate(start_years):
+            axs[1].plot(spend_df.index, spend_df[startyear], lw=2, alpha=0.2, c=colors[i])
+        axs[1].plot(spend_df.index, spend_df.median(axis=1), lw=3, c='black')
+        axs[1].plot(spend_df.index, np.array([4]*len(spend_df)), lw=2, c='black', ls='dashed', alpha=0.5)
+        quantile25 = np.quantile(spend_df, .25, axis=1)
+        quantile75 = np.quantile(spend_df, .75, axis=1)
+        axs[1].fill_between(spend_df.index, quantile25,quantile75, alpha=0.2, color='orange')
 
         #####
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
@@ -475,10 +492,22 @@ class SWRsimulationCE(SWRsimulation):
         axs[2].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
         axs[2].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
         axs[2].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
-        for startyear in start_years:
-            axs[2].plot(portval_df.index, portval_df[startyear], alpha=0.2)
-        axs[2].plot(portval_df.index, portval_df.median(axis=1), lw=5, c='black')
+        axs[2].tick_params(axis='both', labelsize=16, )
+
+        # color by ending portval
+        ending_vals = portval_df.values[-1, :].copy()
+        ending_vals /= np.max(ending_vals)
+        colors = [cm.plasma(x) for x in ending_vals]
         
+        for i, startyear in enumerate(start_years):
+            axs[2].plot(portval_df.index, portval_df[startyear], lw=2, alpha=0.2, c=colors[i])
+        axs[2].plot(portval_df.index, portval_df.median(axis=1), lw=3, c='black')
+        axs[2].plot(portval_df.index, np.array([100]*len(portval_df)), lw=2, c='black', ls='dashed', alpha=0.5)
+        
+        quantile25 = np.quantile(portval_df, .25, axis=1)
+        quantile75 = np.quantile(portval_df, .75, axis=1)
+        axs[2].fill_between(portval_df.index, quantile25,quantile75, color='orange', alpha=0.2)
+
         return plt.show()
 
     def visualize_plotly(self):
