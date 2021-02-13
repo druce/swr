@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import pdb
-# from plotly import graph_objects as go
-# from plotly.subplots import make_subplots
-# import plotly.express as px
+
+from plotly import graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
 
 from .SWRsimulation import SWRsimulation,  START_PORTVAL, Trialdata
-from .crra_ce import crra_ce
+from .eval_metrics import eval_ce, eval_exhaustion, eval_mean_spend, eval_median_spend, eval_min_spend, \
+    eval_max_spend, eval_sd_spend
 
 
 class SWRsimulationCE(SWRsimulation):
@@ -135,80 +136,19 @@ class SWRsimulationCE(SWRsimulation):
         #     desired_withdrawal = min(desired_withdrawal, smoothed_withdrawal)
         return desired_withdrawal
 
-    def eval_exhaustion(self):
-        """exhaustion metric for current trial
-
-        Returns:
-            float: years to exhaustion for current trial
-        """
-        min_end_port_index = int(np.argmin(self.latest_trial.end_ports))
-        min_end_port_value = self.latest_trial.end_ports[min_end_port_index]
-        if min_end_port_value == 0.0:
-            return min_end_port_index
-        else:
-            return self.simulation['n_ret_years']
-
-    def eval_ce(self):
-        """certainty-equivalent metric for current trial
-
-        Returns:
-            float: CE cash flow for spending in current trial
-        """
-        return crra_ce(self.latest_trial.trial_df['spend'], self.evaluation['gamma'])
-    
-    def eval_median_spend(self):
-        """median spend metric for current trial
-
-        Returns:
-            float: Median real spending for current trial
-        """
-        return self.latest_trial.trial_df['spend'].median()
-    
-    def eval_mean_spend(self):
-        """median spend metric for current trial
-
-        Returns:
-            float: Mean real spending for current trial
-        """
-        return self.latest_trial.trial_df['spend'].mean()
-    
-    def eval_min_spend(self):
-        """minimum spend metric for current trial
-
-        Returns:
-            float: Minimum real spending for current trial
-        """
-        return self.latest_trial.trial_df['spend'].min()
-    
-    def eval_max_spend(self):
-        """maximum spend metric for current trial
-
-        Returns:
-            float: Maximum real spending for current trial
-        """
-        return self.latest_trial.trial_df['spend'].max()
-    
-    def eval_sd_spend(self):
-        """standard deviation of spend metric for current trial
-
-        Returns:
-            float: standard deviation of real spending for current trial
-        """
-        return self.latest_trial.trial_df['spend'].std()
-    
     def eval_trial(self):
         """compute all metrics and return in dict
 
         Returns:
             dict: key = name of metric, value = metric
         """
-        return {'years_to_exhaustion': self.eval_exhaustion(),
-                'ce_spend': self.eval_ce(),
-                'median_spend': self.eval_median_spend(),
-                'mean_spend': self.eval_mean_spend(),
-                'min_spend': self.eval_min_spend(),
-                'max_spend': self.eval_max_spend(),
-                'sd_spend': self.eval_sd_spend(),
+        return {'years_to_exhaustion': eval_exhaustion(self),
+                'ce_spend': eval_ce(self),
+                'median_spend': eval_median_spend(self),
+                'mean_spend': eval_mean_spend(self),
+                'min_spend': eval_min_spend(self),
+                'max_spend': eval_max_spend(self),
+                'sd_spend': eval_sd_spend(self),
                 }
     
     def historical_trial_generator(self, start_year):
@@ -353,6 +293,7 @@ class SWRsimulationCE(SWRsimulation):
         Returns:
             matplotlib chart object: charts
         """
+        fig, axs = plt.subplots(3, figsize=(20, 30))
 
         if len(self.latest_simulation) > 100 or self.visualization.get('histogram'):
             # histogram
@@ -365,7 +306,7 @@ class SWRsimulationCE(SWRsimulation):
 
             min_spends = [trial_dict['min_spend']
                           for trial_dict in self.latest_simulation]
-            print("minimum annual spending over all cohorts %.2f" % np.min(mean_spends))
+            print("minimum annual spending over all cohorts %.2f" % np.min(min_spends))
 
             survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
                         for trial_dict in self.latest_simulation]
@@ -373,8 +314,6 @@ class SWRsimulationCE(SWRsimulation):
             c, bins = np.histogram(survival, bins=np.linspace(0, 30, 31))
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
-
-            fig, axs = plt.subplots(3, figsize=(20, 30))
 
             mpl_options = {
                 'title': "Histogram of Years to Exhaustion",
@@ -467,7 +406,7 @@ class SWRsimulationCE(SWRsimulation):
         axs[1].plot(spend_df.index, np.array([4]*len(spend_df)), lw=2, c='black', ls='dashed', alpha=0.5)
         quantile25 = np.quantile(spend_df, .25, axis=1)
         quantile75 = np.quantile(spend_df, .75, axis=1)
-        axs[1].fill_between(spend_df.index, quantile25,quantile75, alpha=0.2, color='orange')
+        axs[1].fill_between(spend_df.index, quantile25, quantile75, alpha=0.2, color='orange')
 
         #####
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
@@ -506,7 +445,7 @@ class SWRsimulationCE(SWRsimulation):
         
         quantile25 = np.quantile(portval_df, .25, axis=1)
         quantile75 = np.quantile(portval_df, .75, axis=1)
-        axs[2].fill_between(portval_df.index, quantile25,quantile75, color='orange', alpha=0.2)
+        axs[2].fill_between(portval_df.index, quantile25, quantile75, color='orange', alpha=0.2)
 
         return plt.show()
 
