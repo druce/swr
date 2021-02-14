@@ -9,11 +9,12 @@ def eval_exhaustion(simulation):
     Returns:
         float: year exhausted for current trial or n_ret_years if never exhausted
         float: minimum ending portfolio value (0 if exhaustion < n_ret_years)
+        int: indexes of minimum ending portfolio value
     """
     min_end_port_index = int(np.argmin(simulation.latest_trial.end_ports))
     min_end_port_value = simulation.latest_trial.end_ports[min_end_port_index]
     exhaustion = min_end_port_index if min_end_port_value == 0.0 else simulation.simulation['n_ret_years']
-    return exhaustion, min_end_port_value
+    return exhaustion, min_end_port_value, min_end_port_index
 
 
 def eval_ce(simulation):

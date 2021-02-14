@@ -142,9 +142,10 @@ class SWRsimulationCE(SWRsimulation):
         Returns:
             dict: key = name of metric, value = metric
         """
-        exhaustion, min_end_port = eval_exhaustion(self)
+        exhaustion, min_end_port, min_end_port_index = eval_exhaustion(self)
         return {'exhaustion': exhaustion,
                 'min_end_port': min_end_port,
+                'min_end_port_index': min_end_port_index,
                 'ce_spend': eval_ce(self),
                 'median_spend': eval_median_spend(self),
                 'mean_spend': eval_mean_spend(self),
@@ -310,10 +311,11 @@ class SWRsimulationCE(SWRsimulation):
                           for trial_dict in self.latest_simulation]
             print("minimum annual spending over all cohorts %.2f" % np.min(min_spends))
 
-            min_port_values  = [trial_dict['min_end_port'] for trial_dict in self.latest_simulation]
+            min_port_values  = np.array([trial_dict['min_end_port'] for trial_dict in self.latest_simulation])
             min_port_value = np.min(min_port_values)
-            min_port_value_years = [i for i, y in enumerate(np.where(np.array(min_port_values) == min_port_value, 1, 0)) if y==1]
-            min_port_value_years = [self.latest_simulation[i]['trial'].index[0] for i in min_port_value_years]
+            min_port_value_indexes = np.where(min_port_values==min_port_value, 1, 0)
+            min_port_value_indexes = [i for i, m in enumerate(min_port_value_indexes) if m==1]
+            min_port_value_years = [self.latest_simulation[i]['trial'].index[0] for i in min_port_value_indexes]
             print("minimum ending_portfolio over all cohorts %.8f (years: %s)" % (min_port_value, min_port_value_years))
             
             survival = [trial_dict['exhaustion']
