@@ -142,7 +142,9 @@ class SWRsimulationCE(SWRsimulation):
         Returns:
             dict: key = name of metric, value = metric
         """
-        return {'years_to_exhaustion': eval_exhaustion(self),
+        exhaustion, min_end_port = eval_exhaustion(self)
+        return {'exhaustion': exhaustion,
+                'min_end_port': min_end_port,
                 'ce_spend': eval_ce(self),
                 'median_spend': eval_median_spend(self),
                 'mean_spend': eval_mean_spend(self),
@@ -308,13 +310,18 @@ class SWRsimulationCE(SWRsimulation):
                           for trial_dict in self.latest_simulation]
             print("minimum annual spending over all cohorts %.2f" % np.min(min_spends))
 
-            survival = [trial_dict['years_to_exhaustion']
+            min_port_values  = [trial_dict['min_end_port'] for trial_dict in self.latest_simulation]
+            min_port_value = np.min(min_port_values)
+            min_port_value_years = [i for i, y in enumerate(np.where(np.array(min_port_values) == min_port_value, 1, 0)) if y==1]
+            min_port_value_years = [self.latest_simulation[i]['trial'].index[0] for i in min_port_value_years]
+            print("minimum ending_portfolio over all cohorts %.8f (years: %s)" % (min_port_value, min_port_value_years))
+            
+            survival = [trial_dict['exhaustion']
                         for trial_dict in self.latest_simulation]
             # beware the off-by-1, need N_RET_YEARS + 1 bins, e.g. 1 to 31, so range(1,32)
             # 1 = spend all money first year, 31 = never run out of money even after 30 years
             # 29 = spend last cent in last year
             c, bins = np.histogram(survival, bins=list(range(1,self.simulation['n_ret_years']+2)))
-            
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
 

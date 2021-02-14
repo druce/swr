@@ -4,17 +4,16 @@ from .crra_ce import crra_ce
 
 
 def eval_exhaustion(simulation):
-    """exhaustion metric for current trial
+    """exhaustion and min portfolio metrics for current trial
 
     Returns:
-        float: years to exhaustion for current trial
+        float: year exhausted for current trial or n_ret_years if never exhausted
+        float: minimum ending portfolio value (0 if exhaustion < n_ret_years)
     """
     min_end_port_index = int(np.argmin(simulation.latest_trial.end_ports))
     min_end_port_value = simulation.latest_trial.end_ports[min_end_port_index]
-    if min_end_port_value == 0.0:
-        return min_end_port_index
-    else:
-        return simulation.simulation['n_ret_years']
+    exhaustion = min_end_port_index if min_end_port_value == 0.0 else simulation.simulation['n_ret_years']
+    return exhaustion, min_end_port_value
 
 
 def eval_ce(simulation):
