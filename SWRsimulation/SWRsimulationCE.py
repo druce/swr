@@ -310,8 +310,9 @@ class SWRsimulationCE(SWRsimulation):
 
             survival = [trial_dict['years_to_exhaustion']
                         for trial_dict in self.latest_simulation]
-            # beware the off-by-1, need N_RET_YEARS + 1 bins, e.g. 1 to 31
-            # 1 = spend all money first year, 31 = never run out of money after 30 years
+            # beware the off-by-1, need N_RET_YEARS + 1 bins, e.g. 1 to 31, so range(1,32)
+            # 1 = spend all money first year, 31 = never run out of money even after 30 years
+            # 29 = spend last cent in last year
             c, bins = np.histogram(survival, bins=list(range(1,self.simulation['n_ret_years']+2)))
             
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
