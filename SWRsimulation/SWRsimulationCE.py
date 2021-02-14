@@ -308,10 +308,12 @@ class SWRsimulationCE(SWRsimulation):
                           for trial_dict in self.latest_simulation]
             print("minimum annual spending over all cohorts %.2f" % np.min(min_spends))
 
-            survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
+            survival = [trial_dict['years_to_exhaustion']
                         for trial_dict in self.latest_simulation]
-
-            c, bins = np.histogram(survival, bins=np.linspace(0, 30, 31))
+            # beware the off-by-1, need N_RET_YEARS + 1 bins, e.g. 1 to 31
+            # 1 = spend all money first year, 31 = never run out of money after 30 years
+            c, bins = np.histogram(survival, bins=list(range(1,self.simulation['n_ret_years']+2)))
+            
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
 
@@ -442,6 +444,7 @@ class SWRsimulationCE(SWRsimulation):
             axs[2].plot(portval_df.index, portval_df[startyear], lw=2, alpha=0.2, c=colors[i])
         axs[2].plot(portval_df.index, portval_df.median(axis=1), lw=3, c='black')
         axs[2].plot(portval_df.index, np.array([100]*len(portval_df)), lw=2, c='black', ls='dashed', alpha=0.5)
+        axs[2].plot(portval_df.index, np.array([0]*len(portval_df)), lw=2, c='black', ls='dashed', alpha=0.5)
         
         quantile25 = np.quantile(portval_df, .25, axis=1)
         quantile75 = np.quantile(portval_df, .75, axis=1)
