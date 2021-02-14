@@ -307,9 +307,14 @@ class SWRsimulationCE(SWRsimulation):
                            for trial_dict in self.latest_simulation]
             print("mean annual spending over all cohorts %.2f" % np.mean(mean_spends))
 
+            sd_spends = [trial_dict['sd_spend']
+                           for trial_dict in self.latest_simulation]
+            print("mean within-cohort standard deviation of spending %.2f" % np.mean(sd_spends))
+
             min_spends = [trial_dict['min_spend']
                           for trial_dict in self.latest_simulation]
-            print("minimum annual spending over all cohorts %.2f" % np.min(min_spends))
+            print("lowest annual spending over all cohorts %.2f" % np.min(min_spends))
+            # could add cohort year and year index
 
             min_port_values  = np.array([trial_dict['min_end_port'] for trial_dict in self.latest_simulation])
             min_port_value = np.min(min_port_values)
