@@ -142,7 +142,9 @@ class SWRsimulationCE(SWRsimulation):
         Returns:
             dict: key = name of metric, value = metric
         """
-        return {'years_to_exhaustion': eval_exhaustion(self),
+        exhaustion, min_end_port = eval_exhaustion(self)
+        return {'exhaustion': exhaustion,
+                'min_end_port': min_end_port,
                 'ce_spend': eval_ce(self),
                 'median_spend': eval_median_spend(self),
                 'mean_spend': eval_mean_spend(self),
@@ -308,13 +310,14 @@ class SWRsimulationCE(SWRsimulation):
                           for trial_dict in self.latest_simulation]
             print("minimum annual spending over all cohorts %.2f" % np.min(min_spends))
 
-            survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
-                        for trial_dict in self.latest_simulation]
-
+            survival = [trial_dict['exhaustion'] for trial_dict in self.latest_simulation]
             c, bins = np.histogram(survival, bins=np.linspace(0, 30, 31))
             pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
             print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
 
+            min_port_values  = [trial_dict['min_port_value'] for trial_dict in self.latest_simulation]
+            print("minimum ending_portfolio over all cohorts %.2f" % np.min(min_port_values))
+            
             mpl_options = {
                 'title': "Histogram of Years to Exhaustion",
                 'title_fontsize': 20,
