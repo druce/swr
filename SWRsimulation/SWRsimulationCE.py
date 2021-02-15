@@ -322,14 +322,14 @@ class SWRsimulationCE(SWRsimulation):
         # 29 = spend last cent in last year
         c, bins = np.histogram(survival, bins=list(range(1,self.simulation['n_ret_years']+2)))
         pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
-        table_dict["% cohort portfolios exhausted by final year"] = pct_exhausted * 100
+        table_dict["% cohort portfolios exhausted by final year"] = pct_exhausted
         
         retdf = pd.DataFrame(table_dict, index=[0]).transpose().reset_index()
         retdf.columns=['metric','value']
         return retdf
 
     
-    def chart_1_histogram(self, ax):
+    def chart_1_histogram(self, ax, optionlabel="chart_1"):
         
         # histogram
         # TODO: add more logic, save return_both and act accordingly
@@ -351,7 +351,7 @@ class SWRsimulationCE(SWRsimulation):
             'xlabel_fontsize': 16,
         }
         # merge from visualize options
-        chart_options = self.visualization.get('chart_1')
+        chart_options = self.visualization.get(optionlabel)
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
 
@@ -366,7 +366,7 @@ class SWRsimulationCE(SWRsimulation):
             ax.annotate(mpl_options.get('annotation'),
                             xy=(0.073, 0.925), xycoords='figure fraction', fontsize=16)
 
-    def chart_1_bar(self, ax):
+    def chart_1_bar(self, ax, optionlabel="chart_1"):
         # bar chart of all simulation outcomes
         start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
@@ -384,7 +384,7 @@ class SWRsimulationCE(SWRsimulation):
         }
 
         # merge from visualize options
-        chart_options = self.visualization.get('chart_1')
+        chart_options = self.visualization.get(optionlabel)
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
             
@@ -399,7 +399,7 @@ class SWRsimulationCE(SWRsimulation):
                             xy=(0.073, 0.92), xycoords='figure fraction', fontsize=16)
 
 
-    def chart_2_lines(self, ax):
+    def chart_2_lines(self, ax, optionlabel="chart_2"):
         start_years = [i for i in range(len(self.latest_simulation))]
         spends = np.array([trial_dict['trial']['spend'].values for trial_dict in self.latest_simulation])
         spend_df = pd.DataFrame(data=spends.T,
@@ -415,7 +415,7 @@ class SWRsimulationCE(SWRsimulation):
         }
 
         # merge from visualize options
-        chart_options = self.visualization.get('chart_2')
+        chart_options = self.visualization.get(optionlabel)
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
         
@@ -438,7 +438,7 @@ class SWRsimulationCE(SWRsimulation):
         ax.fill_between(spend_df.index, quantile25, quantile75, alpha=0.2, color='orange')
 
 
-    def chart_3_lines(self, ax):
+    def chart_3_lines(self, ax, optionlabel="chart_3"):
         
         start_years = [i for i in range(len(self.latest_simulation))]
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
@@ -456,7 +456,7 @@ class SWRsimulationCE(SWRsimulation):
         }
 
         # merge from visualize options
-        chart_options = self.visualization.get('chart_3')
+        chart_options = self.visualization.get(optionlabel)
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
         

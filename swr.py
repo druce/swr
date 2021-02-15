@@ -1,23 +1,20 @@
-import streamlit as st
 import numpy as np
 import pandas as pd
 
-DATE_COLUMN = 'date/time'
-DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-         'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
+import streamlit as st
 
-@st.cache
-def load_data(nrows):
-    data = pd.read_csv(DATA_URL, nrows=nrows)
-    lowercase = lambda x: str(x).lower()
-    data.rename(lowercase, axis='columns', inplace=True)
-    data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
-    return data
+from SWRsimulation import SWRsimulationCE
+
+REAL_RETURN_FILE = 'real_return_df.pickle'
+N_RET_YEARS = 30
 
 # Create a text element and let the reader know the data is loading.
 # TODO: loading data with pinwheel or other notification that goes away
-# Load 10,000 rows of data into the dataframe.
-data = load_data(10000)
+# TODO: load file based on current cached params
+# TODO: load remotely
+
+real_return_df = pd.read_pickle(REAL_RETURN_FILE)
+
 # Notify the reader that the data was successfully loaded.
 
 st.title("A 'safe withdrawal rate' visualization")
@@ -31,17 +28,32 @@ param_values = [stock_alloc, bond_alloc, fixed_spending, variable_spending]
 param_table = pd.DataFrame(data=np.array([param_names, param_values]).T, columns=['Parameter', 'Value'])
 st.write(param_table)
 
-st.subheader('Number of pickups by hour')
-hist_values = np.histogram(
-    data[DATE_COLUMN].dt.hour, bins=24, range=(0,24))[0]
-st.bar_chart(hist_values)
+s = SWRsimulationCE.SWRsimulationCE({
+    'simulation': {'returns_df': real_return_df,
+                   'n_ret_years': N_RET_YEARS,
+                                         },
+    'allocation': {'asset_weights': np.array([stock_alloc/100, bond_alloc/100])}, # default is equal-weight
+    'withdrawal': {'fixed_pct': fixed_spending,
+                   'variable_pct': variable_spending},
+    'evaluation': {'gamma': 1},
+    'visualization': {'histogram': True,
+                      'chart_1' : {'title': 'Years to Exhaustion by Retirement Year'},
+                      'chart_2' : {'title': 'Portfolio Spending By Retirement Year'},
+                      'chart_3' : {'title': 'Portfolio Value By Retirement Year'},
+    }    # chart options etc.
+})
 
-hour_to_filter = st.slider('hour', 0, 23, 17)  # min: 0h, max: 23h, default: 17h
-filtered_data = data[data[DATE_COLUMN].dt.hour == hour_to_filter]
-st.subheader(f'Map of all pickups at {hour_to_filter}:00')
-st.map(filtered_data)
+s.simulate()
+import matplotlib.pyplot as plt
+fig, axs = plt.subplots(3, figsize=(20, 30))
+s.chart_1_histogram(axs[0])
+s.chart_2_lines(axs[1])
+s.chart_3_lines(axs[2])
 
-if st.checkbox('Show raw data'):
-    st.subheader('Raw data')
-    st.write(data)
+st.pyplot(fig)
+          
+st.write(s.table_metrics())
+
+
+
 
