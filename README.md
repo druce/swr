@@ -1,11 +1,11 @@
 # swr
 A framework for determining safe withdrawal rates, designed to generalize to:
 
- - Any generator of historical asset returns (historical, Monte Carlo, roll your own market environment)
- - Any asset allocation strategy based on age, returns etc (fixed weights, glidepath schedules, roll your own)
- - Any metrics to evaluate retirement cohort outcomes (e.g. total spending, certainty equivalent spending, roll your own)
- - Any optimizer to find optimal parameters (e.g. asset allocation, withdrawal parameters) for a given metric and market environment
- - Survival table to weight metrics by individuals who experience them
+- Any generator of historical asset returns (historical, Monte Carlo, roll your own market environment)
+- Any asset allocation strategy (fixed weights, glidepath schedules, roll your own based on any parameters)
+- Any withdrawal strategy (fixed withdrawal, variable percentage, combinations, glidepaths)
+- Any metrics to evaluate retirement cohort outcomes (e.g. total spending, certainty equivalent spending, roll your own. Support for survival tables, i.e. calculate expected metric for living retirees taking into account retirement age and survivorship)
+- Any (gradient-free) optimizer to find optimal parameters (e.g. asset allocation, withdrawal parameters) to maximize a metric in the given market environment
 
 ![outcome.png](outcome.png)
 

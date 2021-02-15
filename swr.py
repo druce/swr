@@ -15,13 +15,21 @@ def load_data(nrows):
     return data
 
 # Create a text element and let the reader know the data is loading.
-data_load_state = st.text('Loading data...')
+# TODO: loading data with pinwheel or other notification that goes away
 # Load 10,000 rows of data into the dataframe.
 data = load_data(10000)
 # Notify the reader that the data was successfully loaded.
-data_load_state.text("Done! (using st.cache)")
 
-st.title('Uber pickups in NYC')
+st.title("A 'safe withdrawal rate' visualization")
+stock_alloc = st.slider('Stock allocation', 0, 100, 75)
+bond_alloc = 100 - stock_alloc
+fixed_spending = st.slider('Fixed spending', 0.0, 10.0, 3.0, 0.1)
+variable_spending = st.slider('Variable spending', 0.0, 10.0, 3.0, 0.1)
+
+param_names = ["Stock allocation", "Bond allocation", "Fixed spending", "Variable spending"]
+param_values = [stock_alloc, bond_alloc, fixed_spending, variable_spending]
+param_table = pd.DataFrame(data=np.array([param_names, param_values]).T, columns=['Parameter', 'Value'])
+st.write(param_table)
 
 st.subheader('Number of pickups by hour')
 hist_values = np.histogram(
