@@ -1,8 +1,9 @@
+import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
-
+import pdb
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -115,6 +116,17 @@ class SWRsimulationCE(SWRsimulation):
         self.withdrawal['variable'] = self.withdrawal['variable_pct'] / 100
         self.withdrawal['fixed'] = self.withdrawal['fixed_pct'] / 100 * START_PORTVAL
 
+        if self.withdrawal.get('compose') is None:
+            self.withdrawal['compose'] = 'add'
+        if self.withdrawal['compose'] == 'add':
+            self.withdrawal['compose_flag'] = 1
+        elif self.withdrawal['compose'] == 'max':
+            self.withdrawal['compose_flag'] = 2
+        else:
+            raise Exception("withdrawal 'compose' config must be either 'add' or 'max'")
+        
+        # default compose to combine fixed and variable is addition
+
         # initialize smoothing parameter (disabled)
         # if self.withdrawal.get('smoothing_factor') is None:
         #     self.withdrawal['smoothing_factor'] = 1.0
@@ -128,13 +140,23 @@ class SWRsimulationCE(SWRsimulation):
             float: withdrawal for current iteration
         """
         portval = self.latest_trial.portval
-        desired_withdrawal = portval * self.withdrawal['variable'] + self.withdrawal['fixed']
-        # smoothing factor (doesn't improve outcomes)
+        if self.withdrawal['compose_flag'] == 1:
+            # add
+            desired_withdrawal = portval * self.withdrawal['variable'] + self.withdrawal['fixed']            
+        elif self.withdrawal['compose_flag'] == 2:
+            # max
+            desired_withdrawal = max(portval * self.withdrawal['variable'], self.withdrawal['fixed'])
+        else:
+            raise Exception("bad withdrawal 'compose' flag")
+        
+        # smoothing factor (not currently supported, didn't improve outcomes)
         # if self.latest_trial.spends:
         #     previous_withdrawal = self.latest_trial.spends[-1]
         #     smoothed_withdrawal = previous_withdrawal + (desired_withdrawal - previous_withdrawal)/self.withdrawal['smoothing_factor']
         #     desired_withdrawal = min(desired_withdrawal, smoothed_withdrawal)
-        return desired_withdrawal
+
+        # can't spend more than portfolio
+        return min(desired_withdrawal, self.latest_trial.portval)
 
     def eval_trial(self):
         """compute all metrics and return in dict
@@ -481,6 +503,48 @@ class SWRsimulationCE(SWRsimulation):
         ax.fill_between(portval_df.index, quantile25, quantile75, color='orange', alpha=0.2)
 
         
+    def chart_spending_by_portval(self, ax, optionlabel="chart_4"):
+        
+        portvals = np.linspace(0, 200, 2001)
+        test_sim = SWRsimulationCE({
+            'simulation': {'returns_df': self.simulation['returns_df'],
+                           'n_ret_years': self.simulation['n_ret_years'],
+            },
+            'allocation': {'asset_weights': np.array([0.5, 0.5])},
+            'withdrawal': {'fixed_pct': self.withdrawal['fixed_pct'],
+                           'variable_pct': self.withdrawal['variable_pct'],
+                           'compose': self.withdrawal['compose'],
+            },
+        })
+
+        spendvals = []
+
+        for portval in portvals:
+            test_sim.latest_trial.portval = portval
+            spendvals.append(test_sim.get_withdrawal())
+
+        mpl_options = {
+            'title': "Withdrawal Profile (Withdrawal Value vs. Portfolio Value)",
+            'title_fontsize': 20,
+            'ylabel': 'Portfolio Value',
+            'ylabel_fontsize': 16,
+            'xlabel': 'Withdrawal value',
+            'xlabel_fontsize': 16,
+        }
+
+        # merge from visualize options
+        chart_options = self.visualization.get(optionlabel)
+        if chart_options:
+            mpl_options = {**mpl_options, **chart_options}
+        
+        ax.set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        ax.set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        ax.set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        ax.tick_params(axis='both', labelsize=16, )
+
+        ax.plot(portvals, spendvals, lw=2, c='black')
+
+        
     def visualize(self):
         """display metrics and dataviz for the current simulation with matplotlib
 
@@ -493,7 +557,7 @@ class SWRsimulationCE(SWRsimulation):
             display(self.table_metrics())
 
         # do 3 charts 
-        fig, axs = plt.subplots(3, figsize=(20, 30))
+        fig, axs = plt.subplots(4, figsize=(20, 40))
 
         if len(self.latest_simulation) > 100 or self.visualization.get('histogram'):
             self.chart_1_histogram(axs[0])
@@ -503,6 +567,8 @@ class SWRsimulationCE(SWRsimulation):
         self.chart_2_lines(axs[1])
 
         self.chart_3_lines(axs[2])
+
+        self.chart_spending_by_portval(axs[3])
 
         return plt.show()
 

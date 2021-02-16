@@ -7,9 +7,18 @@ A framework for determining safe withdrawal rates, designed to generalize to:
 - Any metrics to evaluate retirement cohort outcomes (e.g. total spending, certainty equivalent spending, roll your own. Support for survival tables, i.e. calculate expected metric for living retirees taking into account retirement age and survivorship)
 - Any (gradient-free) optimizer to find optimal parameters (e.g. asset allocation, withdrawal parameters) to maximize a metric in the given market environment
 
-![outcome.png](outcome.png)
+Example:
+   - metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter
+   - allocation rule: 1 parameter = stock_alloc. Allocate a fixed amount to stocks and bonds (bond_alloc=1-stock_alloc)
+   - withdrawal rule: withdraw fixed_spending + variable_spending * portval / 100
+   - market environment: historical returns 1928-2020; analyze 30-year retirement cohorts
+   - therefore, for each gamma we run optimizers to find the parameters (stock_alloc, fixed_spending, variable_spending) that would have maximized certainty-equivalent spending over all 30-year retirement cohorts 1928-1991 (latest available data)
+
+(work-in-progress, YMMV, reach out with any questions, suggestions)
 
 ![optimal_by_gamma_table.png](optimal_by_gamma_table.png)
+
+![outcome.png](outcome.png)
 
 ```python
 FIXED_SPEND = 3.5
