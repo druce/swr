@@ -1,5 +1,5 @@
 # swr
-A framework for determining safe withdrawal rates, designed to generalize to:
+A framework for determining safe withdrawal rates, designed to accommodate:
 
 - Any generator of historical asset returns (historical, Monte Carlo, roll your own market environment)
 - Any asset allocation strategy (fixed weights, glidepath schedules, roll your own based on any parameters)
@@ -8,11 +8,12 @@ A framework for determining safe withdrawal rates, designed to generalize to:
 - Any (gradient-free) optimizer to find optimal parameters (e.g. asset allocation, withdrawal parameters) to maximize a metric in the given market environment
 
 Example:
-   - metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter
-   - allocation rule: 1 parameter = stock_alloc. Allocate a fixed amount to stocks and bonds (bond_alloc=1-stock_alloc)
-   - withdrawal rule: 2 parameters = fixed_spending, variable_spending. Withdraw fixed_spending + variable_spending * portval / 100
-   - market environment: historical returns 1928-2020; analyze 30-year retirement cohorts
-   - therefore, for each gamma we run optimizers to find the parameters (stock_alloc, fixed_spending, variable_spending) that would have maximized certainty-equivalent spending over all 30-year retirement cohorts 1928-1991 (latest available data)
+
+   - Metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter.
+   - Allocation rule: 1 parameter = stock_alloc. Allocate a fixed amount to stocks and bonds (bond_alloc=1-stock_alloc).
+   - Withdrawal rule: 2 parameters = fixed_spending, variable_spending. Withdraw fixed_spending + variable_spending * portval / 100.
+   - Market environment: historical returns 1928-2020; analyze 30-year retirement cohorts.
+   - In this example, for each gamma we run optimizers to find the parameters (stock_alloc, fixed_spending, variable_spending) that would have maximized certainty-equivalent spending over all available 30-year retirement cohorts 1928-1991.
 
 (work-in-progress, YMMV, reach out with any questions, suggestions)
 

@@ -458,6 +458,7 @@ class SWRsimulationCE(SWRsimulation):
         quantile25 = np.quantile(spend_df, .25, axis=1)
         quantile75 = np.quantile(spend_df, .75, axis=1)
         ax.fill_between(spend_df.index, quantile25, quantile75, alpha=0.2, color='orange')
+        ax.plot(spend_df.index, np.array([0]*len(spend_df)), lw=2, c='black', ls='dashed', alpha=0.5)
 
 
     def chart_3_lines(self, ax, optionlabel="chart_3"):
