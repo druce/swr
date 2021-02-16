@@ -10,7 +10,7 @@ A framework for determining safe withdrawal rates, designed to generalize to:
 Example:
    - metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter
    - allocation rule: 1 parameter = stock_alloc. Allocate a fixed amount to stocks and bonds (bond_alloc=1-stock_alloc)
-   - withdrawal rule: withdraw fixed_spending + variable_spending * portval / 100
+   - withdrawal rule: 2 parameters = fixed_spending, variable_spending. Withdraw fixed_spending + variable_spending * portval / 100
    - market environment: historical returns 1928-2020; analyze 30-year retirement cohorts
    - therefore, for each gamma we run optimizers to find the parameters (stock_alloc, fixed_spending, variable_spending) that would have maximized certainty-equivalent spending over all 30-year retirement cohorts 1928-1991 (latest available data)
 
@@ -21,6 +21,7 @@ Example:
 ![outcome.png](outcome.png)
 
 ```python
+N_RET_YEARS = 30
 FIXED_SPEND = 3.5
 VARIABLE_SPEND = 1.0
 ALLOC_STOCKS = 0.75
