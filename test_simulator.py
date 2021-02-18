@@ -47,11 +47,13 @@ def test_zero():
 
     s = SWRsimulationCE.SWRsimulationCE({
         'simulation': {'n_ret_years': 30,
-                      'n_assets': 2,
-                      'trials': trials},
+                       'n_assets': 2,
+                       'trials': trials},
         'allocation': {},
         'withdrawal': {'fixed_pct': 0.0,
-                     'variable_pct': 0.0},
+                       'variable_pct': 0.0,
+                       'floor_pct': 0.0,
+        },
         'evaluation': {},
     })
 
@@ -67,7 +69,8 @@ def test_fixed1():
 
     RETURN = 0.0
     FIXED = 2.0
-    VARIABLE = 0.00
+    VARIABLE = 0.0
+    FLOOR = 0.0
     NYEARS = 30
 
     download_df = load_returns()
@@ -80,11 +83,12 @@ def test_fixed1():
 
     s = SWRsimulationCE.SWRsimulationCE({
         'simulation': {'n_ret_years': NYEARS,
-                      'n_assets': 2,
-                      'trials': trials},
+                       'n_assets': 2,
+                       'trials': trials},
         'allocation': {},
         'withdrawal': {'fixed_pct': FIXED,
-                     'variable_pct': VARIABLE},
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR},
         'evaluation': {},
     })
 
@@ -100,6 +104,7 @@ def test_variable1():
     RETURN = 0.0
     FIXED = 0
     VARIABLE = 2.0
+    FLOOR = 0.0
     NYEARS = 30
 
     download_df = load_returns()
@@ -116,7 +121,9 @@ def test_variable1():
                       'trials': trials},
         'allocation': {},
         'withdrawal': {'fixed_pct': FIXED,
-                     'variable_pct': VARIABLE},
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR,
+        },
         'evaluation': {},
     })
 
@@ -136,6 +143,7 @@ def test_fixed2():
     RETURN = 0.04
     FIXED = 4
     VARIABLE = 0.0
+    FLOOR = 0.0
     NYEARS = 30
 
     download_df = load_returns()
@@ -152,7 +160,9 @@ def test_fixed2():
                       'trials': trials},
         'allocation': {},
         'withdrawal': {'fixed_pct': FIXED,
-                     'variable_pct': VARIABLE},
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR,
+        },
         'evaluation': {},
     })
 
@@ -167,6 +177,7 @@ def test_variable2():
     # return 0.02% variable spending 0.02/1.02, check final value unchanged
     RETURN = 0.02
     FIXED = 0.0
+    FLOOR = 0.0
     VARIABLE = 0.02 / 1.02 * 100
     NYEARS = 30
 
@@ -184,7 +195,9 @@ def test_variable2():
                       'trials': trials},
         'allocation': {},
         'withdrawal': {'fixed_pct': FIXED,
-                     'variable_pct': VARIABLE},
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR,
+        },
         'evaluation': {},
     })
 
@@ -220,7 +233,9 @@ def test_bengen():
                       'trials': trials},
         'allocation': {},
         'withdrawal': {'fixed_pct': FIXED,
-                     'variable_pct': VARIABLE},
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR,
+        },
         'evaluation': {},
     })
 
