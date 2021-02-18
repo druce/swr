@@ -9,9 +9,9 @@ A framework for determining safe withdrawal rates, designed to accommodate:
 
 Example:
 
-   - Market environment: historical returns 1928-2020; 2 assest, stocks and intermediate-term corporate bonds; analyze 30-year retirement cohorts.
-   - Allocation rule: 1 parameter = `stock_alloc`. Allocate a fixed percentage to stocks. bond_alloc = 1-stock_alloc.
-   - Withdrawal rule: 3 parameters = `fixed_pct`, `variable_pct`, `floor_pct`. Withdrawal is a linear function of the portfolio value, with a floor. Withdraw fixed_pct (intercept), plus variable_pct (slope) * on portfolio value, with a floor: `max(floor_pct, fixed_pct + variable_pct * portval / 100)`.
+   - Market environment: historical returns 1928-2020; 2 assets, stocks and intermediate-term corporate bonds; analyze 30-year retirement cohorts.
+   - Allocation rule: 1 parameter = `stock_alloc`. Allocate a fixed percentage to stocks. `bond_alloc` = 1 - `stock_alloc`.
+   - Withdrawal rule: 3 parameters = `fixed_pct`, `variable_pct`, `floor_pct`. Withdrawal is a linear function of the portfolio value, with a floor. Withdraw `fixed_pct` (intercept), plus `variable_pct` (slope) * portfolio value, with a floor: `max(floor_pct, fixed_pct + variable_pct * portval / 100)`.
    - Metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter.
    - In this example, for each gamma value, we run optimizers to find the parameters (`stock_alloc`, `fixed_pct`, `variable_pct`, `floor_pct`) that would have maximized certainty-equivalent spending over all available 30-year retirement cohorts 1928-1991.
 
