@@ -217,6 +217,7 @@ def test_bengen():
     BOND_RETURN = (1.05 / 1.03) - 1
     VARIABLE = 0.0
     FIXED = 4.0
+    FLOOR = 0.0
     NYEARS = 30
 
     download_df = load_returns()
