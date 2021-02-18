@@ -115,17 +115,7 @@ class SWRsimulationCE(SWRsimulation):
             self.withdrawal['fixed_pct'] = 0.0
         self.withdrawal['variable'] = self.withdrawal['variable_pct'] / 100
         self.withdrawal['fixed'] = self.withdrawal['fixed_pct'] / 100 * START_PORTVAL
-
-        if self.withdrawal.get('compose') is None:
-            self.withdrawal['compose'] = 'add'
-        if self.withdrawal['compose'] == 'add':
-            self.withdrawal['compose_flag'] = 1
-        elif self.withdrawal['compose'] == 'max':
-            self.withdrawal['compose_flag'] = 2
-        else:
-            raise Exception("withdrawal 'compose' config must be either 'add' or 'max'")
-        
-        # default compose to combine fixed and variable is addition
+        self.withdrawal['floor'] = self.withdrawal['floor_pct'] / 100 * START_PORTVAL
 
         # initialize smoothing parameter (disabled)
         # if self.withdrawal.get('smoothing_factor') is None:
@@ -140,14 +130,9 @@ class SWRsimulationCE(SWRsimulation):
             float: withdrawal for current iteration
         """
         portval = self.latest_trial.portval
-        if self.withdrawal['compose_flag'] == 1:
-            # add
-            desired_withdrawal = portval * self.withdrawal['variable'] + self.withdrawal['fixed']            
-        elif self.withdrawal['compose_flag'] == 2:
-            # max
-            desired_withdrawal = max(portval * self.withdrawal['variable'], self.withdrawal['fixed'])
-        else:
-            raise Exception("bad withdrawal 'compose' flag")
+        desired_withdrawal = portval * self.withdrawal['variable'] + self.withdrawal['fixed']
+        # max floor, desired
+        desired_withdrawal = max(desired_withdrawal, self.withdrawal['floor'])
         
         # smoothing factor (not currently supported, didn't improve outcomes)
         # if self.latest_trial.spends:
@@ -453,8 +438,8 @@ class SWRsimulationCE(SWRsimulation):
         
         for i, startyear in enumerate(start_years):
             ax.plot(spend_df.index, spend_df[startyear], lw=2, alpha=0.2, c=colors[i])
-        ax.plot(spend_df.index, spend_df.median(axis=1), lw=3, c='black')
-        ax.plot(spend_df.index, np.array([4]*len(spend_df)), lw=2, c='black', ls='dashed', alpha=0.5)
+        # ax.plot(spend_df.index, spend_df.median(axis=1), lw=2, c='black')
+
         quantile25 = np.quantile(spend_df, .25, axis=1)
         quantile75 = np.quantile(spend_df, .75, axis=1)
         ax.fill_between(spend_df.index, quantile25, quantile75, alpha=0.2, color='orange')
@@ -514,7 +499,7 @@ class SWRsimulationCE(SWRsimulation):
             'allocation': {'asset_weights': np.array([0.5, 0.5])},
             'withdrawal': {'fixed_pct': self.withdrawal['fixed_pct'],
                            'variable_pct': self.withdrawal['variable_pct'],
-                           'compose': self.withdrawal['compose'],
+                           'floor_pct': self.withdrawal['floor_pct'],
             },
         })
 

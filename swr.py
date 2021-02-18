@@ -18,6 +18,29 @@ real_return_df = pd.read_pickle(REAL_RETURN_FILE)
 # Notify the reader that the data was successfully loaded.
 
 st.title("A 'safe withdrawal rate' visualization")
+
+defaults = st.selectbox("Choose defaults",
+                        [
+                            { "name": "Zeros",
+                              "slider1": 0,
+                              "slider2": 0,
+                            },
+                            {"name": "Two and three",
+                             "slider1": 2,
+                             "slider2": 3
+                            },
+                        ],
+                        format_func=lambda option:option["name"]
+)
+
+slider = st.slider("set value", min_value=0, value=defaults["slider1"], max_value=10)
+
+st.write(f"Slider value: {slider}")
+
+slider_2 = st.slider("set value 2", min_value=0, value=defaults["slider2"], max_value=10)
+
+st.write(f"Slider value: {slider_2}")
+
 stock_alloc = st.slider('Stock allocation', 0, 100, 75)
 bond_alloc = 100 - stock_alloc
 fixed_spending = st.slider('Fixed spending', 0.0, 10.0, 3.0, 0.1)
