@@ -9,11 +9,11 @@ A framework for determining safe withdrawal rates, designed to accommodate:
 
 Example:
 
+   - Market environment: historical returns 1928-2020; 2 assest, stocks and intermediate-term corporate bonds; analyze 30-year retirement cohorts.
+   - Allocation rule: 1 parameter = `stock_alloc`. Allocate a fixed percentage to stocks. bond_alloc = 1-stock_alloc.
+   - Withdrawal rule: 3 parameters = `fixed_pct`, `variable_pct`, `floor_pct`. Withdrawal is a linear function of the portfolio value, with a floor. Withdraw fixed_pct (intercept), plus variable_pct (slope) * on portfolio value, with a floor: `max(floor_pct, fixed_pct + variable_pct * portval / 100)`.
    - Metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter.
-   - Allocation rule: 1 parameter = stock_alloc. Allocate a fixed amount to stocks and bonds (bond_alloc=1-stock_alloc).
-   - Withdrawal rule: 2 parameters = fixed_spending, variable_spending. Withdraw fixed_spending + variable_spending * portval / 100.
-   - Market environment: historical returns 1928-2020; analyze 30-year retirement cohorts.
-   - In this example, for each gamma we run optimizers to find the parameters (stock_alloc, fixed_spending, variable_spending) that would have maximized certainty-equivalent spending over all available 30-year retirement cohorts 1928-1991.
+   - In this example, for each gamma value, we run optimizers to find the parameters (`stock_alloc`, `fixed_pct`, `variable_pct`, `floor_pct`) that would have maximized certainty-equivalent spending over all available 30-year retirement cohorts 1928-1991.
 
 (work-in-progress, YMMV, reach out with any questions, suggestions)
 
@@ -23,8 +23,9 @@ Example:
 
 ```python
 N_RET_YEARS = 30
-FIXED_SPEND = 3.5
-VARIABLE_SPEND = 1.0
+FIXED_PCT = 3.5
+VARIABLE_PCT = 1.0
+FLOOR_PCT = 0.0
 ALLOC_STOCKS = 0.75
 ALLOC_BONDS = 0.25
 GAMMA  = 1.0
@@ -34,14 +35,15 @@ s = SWRsimulationCE.SWRsimulationCE({
                    'n_ret_years': N_RET_YEARS,
                   },
     'allocation': {'asset_weights': np.array([ALLOC_STOCKS, ALLOC_BONDS])}, 
-    'withdrawal': {'fixed_pct': FIXED_SPEND,
-                   'variable_pct': VARIABLE_SPEND,
+    'withdrawal': {'fixed_pct': FIXED_PCT,
+                   'variable_pct': VARIABLE_PCT,
+		   'floor_pct': FLOOR_PCT,
                   },
     'evaluation': {'gamma': GAMMA},
     'visualization': {'histogram': True, 
                       'chart_1' : {'title': 'Years to Exhaustion by Retirement Year (%s, risk aversion = %d)' % (optimizer, GAMMA),
-                                   'annotation': "Fixed spend %.1f, Variable spend %.1f, stocks %.1f%%" % (FIXED_SPEND, 
-                                                                                                           VARIABLE_SPEND, 
+                                   'annotation': "Fixed spend %.1f, Variable spend %.1f, stocks %.1f%%" % (FIXED_PCT, 
+                                                                                                           VARIABLE_PCT, 
                                                                                                            100 * ALLOC_STOCKS)
                                   },
                       'chart_2' : {'title': 'Spending By Retirement Year (%s, risk aversion = %d)' % (optimizer, GAMMA),
