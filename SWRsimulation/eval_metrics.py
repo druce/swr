@@ -1,6 +1,6 @@
 import numpy as np
 
-from .crra_ce import crra_ce
+from .crra_ce import crra_ce, crra_utility
 
 
 def eval_exhaustion(simulation):
@@ -24,6 +24,15 @@ def eval_ce(simulation):
         float: CE cash flow for spending in current trial
     """
     return crra_ce(simulation.latest_trial.trial_df['spend'], simulation.evaluation['gamma'])
+
+
+def eval_crra_utility(simulation):
+    """CRRA utility metric for current trial
+
+    Returns:
+        float: total CRRA utility for spending in current trial
+    """
+    return crra_utility(simulation.latest_trial.trial_df['spend'], simulation.evaluation['gamma'])
 
 
 def eval_median_spend(simulation):
