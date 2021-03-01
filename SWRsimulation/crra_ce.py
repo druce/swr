@@ -144,5 +144,55 @@ def crra_ce_deathrate(cashflows, gamma, deathrate):
         return madj_ce 
 
 
+def crra_utility(cashflows, gamma):
+    """takes a numpy array, returns total CRRA utility
+    General formula for CRRA utility of a single cash flow w (wealth): 
+        u = (w ** (1 - gamma) - 1) / (1-gamma)
+    if gamma = 0, u = w
+    if gamma = 1, log(2). general formula is undefined for gamma=1 but limit as gamma->1 = log(w)
+
+    Args:
+        cashflows (numpy.ndarray): array of cashflows
+        gamma (float): risk aversion parameter
+
+    Returns:
+        float: utility (ranges from -infinity to plus infinity, when gamma is > 1, max is bounded)
+    """
+    
+    # for retirement study assume no negative cashflows
+    if np.any(np.where(cashflows < 0, 1, 0)):
+        return -np.inf
+    elif gamma >= 1.0 and 0.0 in cashflows:
+        return -np.inf
+    elif gamma == 1.0:
+        # general formula for CRRA utility undefined for test_gamma = 1 but limit as test_gamma->1 = log
+        if np.any(np.where(cashflows <= 0, 1, 0)):
+            return -np.inf
+        return np.sum(np.log(cashflows))
+    elif gamma == 2.0:  # simple optimization
+        if 0.0 in cashflows:
+            return -np.inf
+        return np.sum(1 - 1.0 / cashflows)
+    elif gamma > 4.0:
+        # force computations as longdouble for more precision, but always return np.float
+        if 0.0 in cashflows:
+            return -np.inf
+        gamma = np.longdouble(gamma)
+        cashflows = cashflows.astype(np.longdouble)
+        gamma_m1 = gamma - 1.0
+        gamma_m1_inverse = 1.0 / gamma_m1
+        u = np.sum(gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1))
+        return np.float(u)
+    elif gamma > 1.0:
+        if 0.0 in cashflows:
+            return 0.0
+        gamma_m1 = gamma - 1.0
+        gamma_m1_inverse = 1.0 / gamma_m1
+        return np.sum(gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1))
+    else:  # general formula
+        g_1m = 1 - gamma
+        return np.sum((cashflows ** g_1m - 1.0) / g_1m)
+
+
 if __name__ == '__main__':
     print('Executing as standalone script')

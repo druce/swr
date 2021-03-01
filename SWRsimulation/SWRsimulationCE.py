@@ -1,8 +1,9 @@
+import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
-
+import pdb
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
@@ -114,6 +115,7 @@ class SWRsimulationCE(SWRsimulation):
             self.withdrawal['fixed_pct'] = 0.0
         self.withdrawal['variable'] = self.withdrawal['variable_pct'] / 100
         self.withdrawal['fixed'] = self.withdrawal['fixed_pct'] / 100 * START_PORTVAL
+        self.withdrawal['floor'] = self.withdrawal['floor_pct'] / 100 * START_PORTVAL
 
         # initialize smoothing parameter (disabled)
         # if self.withdrawal.get('smoothing_factor') is None:
@@ -129,12 +131,17 @@ class SWRsimulationCE(SWRsimulation):
         """
         portval = self.latest_trial.portval
         desired_withdrawal = portval * self.withdrawal['variable'] + self.withdrawal['fixed']
-        # smoothing factor (doesn't improve outcomes)
+        # max floor, desired
+        desired_withdrawal = max(desired_withdrawal, self.withdrawal['floor'])
+        
+        # smoothing factor (not currently supported, didn't improve outcomes)
         # if self.latest_trial.spends:
         #     previous_withdrawal = self.latest_trial.spends[-1]
         #     smoothed_withdrawal = previous_withdrawal + (desired_withdrawal - previous_withdrawal)/self.withdrawal['smoothing_factor']
         #     desired_withdrawal = min(desired_withdrawal, smoothed_withdrawal)
-        return desired_withdrawal
+
+        # can't spend more than portfolio
+        return min(desired_withdrawal, self.latest_trial.portval)
 
     def eval_trial(self):
         """compute all metrics and return in dict
@@ -277,6 +284,7 @@ class SWRsimulationCE(SWRsimulation):
             current_trial.portval = current_trial.portval - current_trial.spend
             current_trial.end_ports.append(current_trial.portval)
 
+        
         ret_df = pd.DataFrame(index=current_trial.years,
                               data={'start_port': current_trial.start_ports,
                                     'port_return': current_trial.port_returns,
@@ -290,105 +298,116 @@ class SWRsimulationCE(SWRsimulation):
         current_trial.trial_df = pd.concat([ret_df, alloc_df], axis=1)
         return current_trial.trial_df
 
-    def visualize(self):
-        """display metrics and dataviz for the current simulation with matplotlib
+    def table_metrics(self):
 
-        Returns:
-            matplotlib chart object: charts
-        """
-        fig, axs = plt.subplots(3, figsize=(20, 30))
+        table_dict = {}
+        mean_spends = [trial_dict['mean_spend']
+                       for trial_dict in self.latest_simulation]
+        table_dict["mean annual spending over all cohorts"] = np.mean(mean_spends)
 
-        if len(self.latest_simulation) > 100 or self.visualization.get('histogram'):
-            # histogram
-            # TODO: add more logic, save return_both and act accordingly
-            start_years = [i for i in range(len(self.latest_simulation))]
+        sd_spends = [trial_dict['sd_spend']
+                     for trial_dict in self.latest_simulation]
+        table_dict["mean within-cohort standard deviation of spending"] = np.mean(sd_spends)
+        
+        min_spends = [trial_dict['min_spend']
+                      for trial_dict in self.latest_simulation]
+        table_dict["lowest annual spending over all cohorts"] = np.min(min_spends)
+        # could add cohort year and year index
 
-            mean_spends = [trial_dict['mean_spend']
-                           for trial_dict in self.latest_simulation]
-            print("mean annual spending over all cohorts %.2f" % np.mean(mean_spends))
+        min_port_values  = np.array([trial_dict['min_end_port'] for trial_dict in self.latest_simulation])
+        min_port_value = np.min(min_port_values)
+        min_port_value_indexes = np.where(min_port_values==min_port_value, 1, 0)
+        min_port_value_indexes = [i for i, m in enumerate(min_port_value_indexes) if m==1]
+        min_port_value_years = [self.latest_simulation[i]['trial'].index[0] for i in min_port_value_indexes]
+        table_dict["minimum ending portfolio over all cohorts"] = min_port_value
+        table_dict["minimum ending portfolio in years"] = str(min_port_value_years)
+        
+        survival = [trial_dict['exhaustion']
+                    for trial_dict in self.latest_simulation]
+        # beware the off-by-1, need N_RET_YEARS + 1 bins, e.g. 1 to 31, so range(1,32)
+        # 1 = spend all money first year, 31 = never run out of money even after 30 years
+        # 29 = spend last cent in last year
+        c, bins = np.histogram(survival, bins=list(range(1,self.simulation['n_ret_years']+2)))
+        pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
+        table_dict["% cohort portfolios exhausted by final year"] = pct_exhausted
+        
+        retdf = pd.DataFrame(table_dict, index=[0]).transpose().reset_index()
+        retdf.columns=['metric','value']
+        return retdf
 
-            sd_spends = [trial_dict['sd_spend']
-                           for trial_dict in self.latest_simulation]
-            print("mean within-cohort standard deviation of spending %.2f" % np.mean(sd_spends))
+    
+    def chart_1_histogram(self, ax, optionlabel="chart_1"):
+        
+        # histogram
+        # TODO: add more logic, save return_both and act accordingly
+        start_years = [i for i in range(len(self.latest_simulation))]
 
-            min_spends = [trial_dict['min_spend']
-                          for trial_dict in self.latest_simulation]
-            print("lowest annual spending over all cohorts %.2f" % np.min(min_spends))
-            # could add cohort year and year index
+        survival = [trial_dict['exhaustion']
+                    for trial_dict in self.latest_simulation]
+        # beware the off-by-1, need N_RET_YEARS + 1 bins, e.g. 1 to 31, so range(1,32)
+        # 1 = spend all money first year, 31 = never run out of money even after 30 years
+        # 29 = spend last cent in last year
+        c, bins = np.histogram(survival, bins=list(range(1,self.simulation['n_ret_years']+2)))
 
-            min_port_values  = np.array([trial_dict['min_end_port'] for trial_dict in self.latest_simulation])
-            min_port_value = np.min(min_port_values)
-            min_port_value_indexes = np.where(min_port_values==min_port_value, 1, 0)
-            min_port_value_indexes = [i for i, m in enumerate(min_port_value_indexes) if m==1]
-            min_port_value_years = [self.latest_simulation[i]['trial'].index[0] for i in min_port_value_indexes]
-            print("minimum ending_portfolio over all cohorts %.8f (years: %s)" % (min_port_value, min_port_value_years))
+        mpl_options = {
+            'title': "Histogram of Years to Exhaustion",
+            'title_fontsize': 20,
+            'ylabel': 'Portfolio Years to Exhaustion (Log Scale)',
+            'ylabel_fontsize': 16,
+            'xlabel': 'Retirement Year',
+            'xlabel_fontsize': 16,
+        }
+        # merge from visualize options
+        chart_options = self.visualization.get(optionlabel)
+        if chart_options:
+            mpl_options = {**mpl_options, **chart_options}
+
+        ax.set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        ax.set_yscale('log')
+        ax.set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        ax.set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        ax.tick_params(axis='both', labelsize=16, )
+        ax.bar(bins[1:], c)
+
+        if mpl_options.get('annotation'):
+            ax.annotate(mpl_options.get('annotation'),
+                            xy=(0.073, 0.925), xycoords='figure fraction', fontsize=16)
+
+    def chart_1_bar(self, ax, optionlabel="chart_1"):
+        # bar chart of all simulation outcomes
+        start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
+        survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
+                    for trial_dict in self.latest_simulation]
+        years_survived_df = pd.DataFrame(data={'nyears': survival},
+                                         index=start_years)
+
+        mpl_options = {
+            'title': "Years to Exhaustion by Retirement Year",
+            'title_fontsize': 20,
+            'ylabel': 'Years to Exhaustion',
+            'ylabel_fontsize': 16,
+            'xlabel': 'Retirement Year',
+            'xlabel_fontsize': 16,
+        }
+
+        # merge from visualize options
+        chart_options = self.visualization.get(optionlabel)
+        if chart_options:
+            mpl_options = {**mpl_options, **chart_options}
             
-            survival = [trial_dict['exhaustion']
-                        for trial_dict in self.latest_simulation]
-            # beware the off-by-1, need N_RET_YEARS + 1 bins, e.g. 1 to 31, so range(1,32)
-            # 1 = spend all money first year, 31 = never run out of money even after 30 years
-            # 29 = spend last cent in last year
-            c, bins = np.histogram(survival, bins=list(range(1,self.simulation['n_ret_years']+2)))
-            pct_exhausted = np.sum(c[:-1]) / np.sum(c) * 100
-            print("%.2f%% of portfolios exhausted by final year" % pct_exhausted)
+        ax.set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        ax.set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        ax.set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        ax.tick_params(axis='both', labelsize=16, )
+        ax.bar(years_survived_df.index, years_survived_df['nyears'])
 
-            mpl_options = {
-                'title': "Histogram of Years to Exhaustion",
-                'title_fontsize': 20,
-                'ylabel': 'Portfolio Years to Exhaustion (Log Scale)',
-                'ylabel_fontsize': 16,
-                'xlabel': 'Retirement Year',
-                'xlabel_fontsize': 16,
-            }
-            # merge from visualize options
-            chart_options = self.visualization.get('chart_1')
-            if chart_options:
-                mpl_options = {**mpl_options, **chart_options}
+        if mpl_options.get('annotation'):
+            ax.annotate(mpl_options.get('annotation'),
+                            xy=(0.073, 0.92), xycoords='figure fraction', fontsize=16)
 
-            axs[0].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
-            axs[0].set_yscale('log')
-            axs[0].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
-            axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
-            axs[0].tick_params(axis='both', labelsize=16, )
-            axs[0].bar(bins[1:], c)
 
-            if mpl_options.get('annotation'):
-                axs[0].annotate(mpl_options.get('annotation'),
-                                xy=(0.073, 0.925), xycoords='figure fraction', fontsize=16)
-
-        else:
-            # bar chart of all simulation outcomes
-            start_years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
-            survival = [np.sum(np.where(trial_dict['trial']['end_port'].values > 0, 1, 0))
-                        for trial_dict in self.latest_simulation]
-            years_survived_df = pd.DataFrame(data={'nyears': survival},
-                                             index=start_years)
-
-            mpl_options = {
-                'title': "Years to Exhaustion by Retirement Year",
-                'title_fontsize': 20,
-                'ylabel': 'Years to Exhaustion',
-                'ylabel_fontsize': 16,
-                'xlabel': 'Retirement Year',
-                'xlabel_fontsize': 16,
-            }
-
-            # merge from visualize options
-            chart_options = self.visualization.get('chart_1')
-            if chart_options:
-                mpl_options = {**mpl_options, **chart_options}
-            
-            axs[0].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
-            axs[0].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
-            axs[0].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
-            axs[0].tick_params(axis='both', labelsize=16, )
-            axs[0].bar(years_survived_df.index, years_survived_df['nyears'])
-
-            if mpl_options.get('annotation'):
-                axs[0].annotate(mpl_options.get('annotation'),
-                                xy=(0.073, 0.92), xycoords='figure fraction', fontsize=16)
-
-        ######
+    def chart_2_lines(self, ax, optionlabel="chart_2"):
+        start_years = [i for i in range(len(self.latest_simulation))]
         spends = np.array([trial_dict['trial']['spend'].values for trial_dict in self.latest_simulation])
         spend_df = pd.DataFrame(data=spends.T,
                                 columns=start_years)
@@ -403,14 +422,14 @@ class SWRsimulationCE(SWRsimulation):
         }
 
         # merge from visualize options
-        chart_options = self.visualization.get('chart_2')
+        chart_options = self.visualization.get(optionlabel)
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
         
-        axs[1].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
-        axs[1].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
-        axs[1].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
-        axs[1].tick_params(axis='both', labelsize=16, )
+        ax.set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        ax.set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        ax.set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        ax.tick_params(axis='both', labelsize=16, )
 
         # color by ending spend
         ending_vals = spend_df.values[-1, :].copy()
@@ -418,14 +437,18 @@ class SWRsimulationCE(SWRsimulation):
         colors = [cm.plasma(x) for x in ending_vals]
         
         for i, startyear in enumerate(start_years):
-            axs[1].plot(spend_df.index, spend_df[startyear], lw=2, alpha=0.2, c=colors[i])
-        axs[1].plot(spend_df.index, spend_df.median(axis=1), lw=3, c='black')
-        axs[1].plot(spend_df.index, np.array([4]*len(spend_df)), lw=2, c='black', ls='dashed', alpha=0.5)
+            ax.plot(spend_df.index, spend_df[startyear], lw=2, alpha=0.2, c=colors[i])
+        # ax.plot(spend_df.index, spend_df.median(axis=1), lw=2, c='black')
+
         quantile25 = np.quantile(spend_df, .25, axis=1)
         quantile75 = np.quantile(spend_df, .75, axis=1)
-        axs[1].fill_between(spend_df.index, quantile25, quantile75, alpha=0.2, color='orange')
+        ax.fill_between(spend_df.index, quantile25, quantile75, alpha=0.2, color='orange')
+        ax.plot(spend_df.index, np.array([0]*len(spend_df)), lw=2, c='black', ls='dashed', alpha=0.5)
 
-        #####
+
+    def chart_3_lines(self, ax, optionlabel="chart_3"):
+        
+        start_years = [i for i in range(len(self.latest_simulation))]
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_rows, portval_cols = portvals.shape
         portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * 100), portvals]).T,
@@ -441,14 +464,14 @@ class SWRsimulationCE(SWRsimulation):
         }
 
         # merge from visualize options
-        chart_options = self.visualization.get('chart_3')
+        chart_options = self.visualization.get(optionlabel)
         if chart_options:
             mpl_options = {**mpl_options, **chart_options}
         
-        axs[2].set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
-        axs[2].set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
-        axs[2].set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
-        axs[2].tick_params(axis='both', labelsize=16, )
+        ax.set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        ax.set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        ax.set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        ax.tick_params(axis='both', labelsize=16, )
 
         # color by ending portval
         ending_vals = portval_df.values[-1, :].copy()
@@ -456,14 +479,82 @@ class SWRsimulationCE(SWRsimulation):
         colors = [cm.plasma(x) for x in ending_vals]
         
         for i, startyear in enumerate(start_years):
-            axs[2].plot(portval_df.index, portval_df[startyear], lw=2, alpha=0.2, c=colors[i])
-        axs[2].plot(portval_df.index, portval_df.median(axis=1), lw=3, c='black')
-        axs[2].plot(portval_df.index, np.array([100]*len(portval_df)), lw=2, c='black', ls='dashed', alpha=0.5)
-        axs[2].plot(portval_df.index, np.array([0]*len(portval_df)), lw=2, c='black', ls='dashed', alpha=0.5)
+            ax.plot(portval_df.index, portval_df[startyear], lw=2, alpha=0.2, c=colors[i])
+        ax.plot(portval_df.index, portval_df.median(axis=1), lw=3, c='black')
+        ax.plot(portval_df.index, np.array([100]*len(portval_df)), lw=2, c='black', ls='dashed', alpha=0.5)
+        ax.plot(portval_df.index, np.array([0]*len(portval_df)), lw=2, c='black', ls='dashed', alpha=0.5)
         
         quantile25 = np.quantile(portval_df, .25, axis=1)
         quantile75 = np.quantile(portval_df, .75, axis=1)
-        axs[2].fill_between(portval_df.index, quantile25, quantile75, color='orange', alpha=0.2)
+        ax.fill_between(portval_df.index, quantile25, quantile75, color='orange', alpha=0.2)
+
+        
+    def chart_spending_by_portval(self, ax, optionlabel="chart_4"):
+        
+        portvals = np.linspace(0, 200, 2001)
+        test_sim = SWRsimulationCE({
+            'simulation': {'returns_df': self.simulation['returns_df'],
+                           'n_ret_years': self.simulation['n_ret_years'],
+            },
+            'allocation': {'asset_weights': np.array([0.5, 0.5])},
+            'withdrawal': {'fixed_pct': self.withdrawal['fixed_pct'],
+                           'variable_pct': self.withdrawal['variable_pct'],
+                           'floor_pct': self.withdrawal['floor_pct'],
+            },
+        })
+
+        spendvals = []
+
+        for portval in portvals:
+            test_sim.latest_trial.portval = portval
+            spendvals.append(test_sim.get_withdrawal())
+
+        mpl_options = {
+            'title': "Withdrawal Profile (Withdrawal Value vs. Portfolio Value)",
+            'title_fontsize': 20,
+            'ylabel': 'Portfolio Value',
+            'ylabel_fontsize': 16,
+            'xlabel': 'Withdrawal value',
+            'xlabel_fontsize': 16,
+        }
+
+        # merge from visualize options
+        chart_options = self.visualization.get(optionlabel)
+        if chart_options:
+            mpl_options = {**mpl_options, **chart_options}
+        
+        ax.set_title(mpl_options['title'], fontsize=mpl_options['title_fontsize'])
+        ax.set_ylabel(mpl_options['ylabel'], fontsize=mpl_options['ylabel_fontsize'])
+        ax.set_xlabel(mpl_options['xlabel'], fontsize=mpl_options['xlabel_fontsize'])
+        ax.tick_params(axis='both', labelsize=16, )
+
+        ax.plot(portvals, spendvals, lw=2, c='black')
+
+        
+    def visualize(self):
+        """display metrics and dataviz for the current simulation with matplotlib
+
+        Returns:
+            matplotlib chart object: charts
+        """
+
+        # display table of results
+        with pd.option_context('display.precision', 8):
+            display(self.table_metrics())
+
+        # do 3 charts 
+        fig, axs = plt.subplots(4, figsize=(20, 40))
+
+        if len(self.latest_simulation) > 100 or self.visualization.get('histogram'):
+            self.chart_1_histogram(axs[0])
+        else:
+            self.chart_1_bar(axs[0])
+
+        self.chart_2_lines(axs[1])
+
+        self.chart_3_lines(axs[2])
+
+        self.chart_spending_by_portval(axs[3])
 
         return plt.show()
 
