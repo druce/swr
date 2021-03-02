@@ -7,13 +7,10 @@ class SwrForm extends Component {
     render() {
         return (
             <div className="row row-content">
-                <div className="col-12">
-                    <h3 className="form-title">Form Title</h3>
-                </div>
                 <div className="col-12 col-md-9">
                     <Form onSubmit={this.props.mainObj.handleSubmit}>
                     <FormGroup row>
-                            <Label htmlFor="stock_alloc_pct" md={2}>Stocks</Label>
+                            <Label htmlFor="stock_alloc_pct" md={2} className="text-right">Stocks</Label>
                             <Col md={10}>
                                 <Input type="text" id="stock_alloc_pct" name="stock_alloc_pct"
                                 placeholder="pct"
@@ -22,7 +19,7 @@ class SwrForm extends Component {
                             </Col>
                         </FormGroup>
                         <FormGroup row>
-                            <Label htmlFor="bond_alloc_pct" md={2}>Bonds</Label>
+                            <Label htmlFor="bond_alloc_pct" md={2} className="text-right">Bonds</Label>
                             <Col md={10}>
                                 <Input type="text" id="bond_alloc_pct" name="bond_alloc_pct"
                                 placeholder="pct"
@@ -31,7 +28,7 @@ class SwrForm extends Component {
                             </Col>
                         </FormGroup>                        
                         <FormGroup row>
-                            <Label htmlFor="withdrawal_fixed_pct" md={2}>Fixed</Label>
+                            <Label htmlFor="withdrawal_fixed_pct" md={2} className="text-right">Fixed</Label>
                             <Col md={10}>
                                 <Input type="text" id="withdrawal_fixed_pct" name="withdrawal_fixed_pct"
                                 placeholder="pct"
@@ -40,7 +37,7 @@ class SwrForm extends Component {
                             </Col>
                         </FormGroup>                        
                         <FormGroup row>
-                            <Label htmlFor="withdrawal_variable_pct" md={2}>Variable</Label>
+                            <Label htmlFor="withdrawal_variable_pct" md={2} className="text-right">Variable</Label>
                             <Col md={10}>
                                 <Input type="text" id="withdrawal_variable_pct" name="withdrawal_variable_pct"
                                 placeholder="pct"
@@ -49,7 +46,7 @@ class SwrForm extends Component {
                             </Col>
                         </FormGroup>                        
                         <FormGroup row>
-                            <Label htmlFor="withdrawal_floor_pct" md={2}>Floor</Label>
+                            <Label htmlFor="withdrawal_floor_pct" md={2} className="text-right">Floor</Label>
                             <Col md={10}>
                                 <Input type="text" id="withdrawal_floor_pct" name="withdrawal_floor_pct"
                                 placeholder="pct"

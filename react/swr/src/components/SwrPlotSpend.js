@@ -16,7 +16,6 @@ class SwrPlotSpend extends Component {
         name: df.index[i],
         type: 'scatter',
         mode: 'lines',
-        color: 'bluered',
         line: {'width': 1},
       }); 
     }
@@ -41,7 +40,10 @@ class SwrPlotSpend extends Component {
             l: 40,
             b: 40,
             pad: 0
-          }}
+          },
+          autocolorscale: false,
+          colorscale: 'Viridis',
+        }
         }
       />
     );

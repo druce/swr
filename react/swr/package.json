@@ -17,6 +17,7 @@
 						"jquery": "^3.5.1",
 						"plotly.js": "^1.58.4",
 						"popper.js": "^1.16.1",
+						"rc-slider": "^9.7.1",
 						"react": "^17.0.1",
 						"react-dom": "^17.0.1",
 						"react-plotly.js": "^2.5.1",
@@ -68,5 +69,5 @@
 			},
 			"author": "Druce Vertes",
 			"license": "MIT",
-			"homepage": "https://github.com/druce/swr"
+			"homepage": "http://www.streeteye.com/static/swr/"
 }

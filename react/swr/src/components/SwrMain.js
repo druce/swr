@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import SwrHeader from './SwrHeader';
-import SwrForm from './SwrForm';
+import SwrSliders from './SwrSliders';
 import SwrDescription from './SwrDescription';
 import SwrPlots from './SwrPlots';
 import SwrFooter from './SwrFooter';
@@ -33,8 +33,6 @@ export class SwrMain extends Component {
             portval_df: PORTVAL_DF,
             profile_df: PROFILE_DF,
             survival_df: SURVIVAL_DF,
-            plot4x: [1, 2, 3],
-            plot4y: [2, 1, 3]      
         };
 
         this.handleStockChange = this.handleStockChange.bind(this);
@@ -46,6 +44,8 @@ export class SwrMain extends Component {
         this.calc_profile_df = this.calc_profile_df.bind(this);
         this.recalc_cohort_data = this.recalc_cohort_data.bind(this);
 
+        this.recalc_cohort_data();
+        this.calc_profile_df();
     }
 
     calc_profile_df() {
@@ -187,7 +187,7 @@ export class SwrMain extends Component {
         return (
             <div>
                 <SwrHeader />
-                <SwrForm mainObj={this} />
+                <SwrSliders mainObj={this} />
                 <SwrDescription {...this.state} />
                 <SwrPlots mainObj={this} />
                 <SwrFooter />
