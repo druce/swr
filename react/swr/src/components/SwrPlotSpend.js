@@ -7,7 +7,7 @@ class SwrPlotSpend extends Component {
   render() {
 
     let df = this.props.mainObj.state.spend_df;
-    let n_cohorts = df.index.length;
+    let n_cohorts = df.data.length;
     let plotly_data = []
     for(var i=0; i<n_cohorts; i++) {
       plotly_data.push({
@@ -16,7 +16,8 @@ class SwrPlotSpend extends Component {
         name: df.index[i],
         type: 'scatter',
         mode: 'lines',
-        line: {'width': 1}        
+        color: 'bluered',
+        line: {'width': 1},
       }); 
     }
     return (
