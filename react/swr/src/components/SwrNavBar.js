@@ -26,7 +26,7 @@ const SwrNavBar = (props) => {
   return (
     <div>
       <Navbar className="navbar-custom" expand="md">
-        <NavbarBrand className="navbar-brand-custom" href="/">Druce.ai</NavbarBrand>
+        <NavbarBrand className="navbar-brand-custom" href="https://druce.ai/">Druce.ai</NavbarBrand>
         <NavbarToggler onClick={toggle} />
         <Collapse isOpen={isOpen} navbar>
             <Nav className="ml-auto navbar-custom" navbar>

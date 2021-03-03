@@ -45,8 +45,7 @@ export class SwrMain extends Component {
         this.calc_profile_df = this.calc_profile_df.bind(this);
         this.recalc_cohort_data = this.recalc_cohort_data.bind(this);
 
-        this.calc_profile_df();
-        this.recalc_cohort_data();
+        this.do_recalc();
     }
 
     calc_profile_df() {
@@ -146,42 +145,45 @@ export class SwrMain extends Component {
         
     }
 
+    do_recalc() {
+        this.calc_profile_df();
+        this.recalc_cohort_data();    
+    }
+
     handleSubmit(event) {
         event.preventDefault();
-        this.calc_profile_df();
-        this.recalc_cohort_data();
-
+        this.do_recalc();
         // console.log('Current State is: ' + JSON.stringify(this.state));
     }
 
     handleStockChange(event) {
         let targetval = parseFloat(event.target.value)
         targetval = isNaN(targetval) ? 0 : targetval;
-        this.setState({stock_alloc_pct: targetval});
+        this.setState({stock_alloc_pct: targetval}, this.do_recalc);
     }
 
     handleBondChange(event) {
         let targetval = parseFloat(event.target.value)
         targetval = isNaN(targetval) ? 0 : targetval;
-        this.setState({bond_alloc_pct: targetval});
+        this.setState({bond_alloc_pct: targetval}, this.do_recalc);
     }
 
     handleFixedChange(event) {
         let targetval = parseFloat(event.target.value)
         targetval = isNaN(targetval) ? 0 : targetval;
-        this.setState({withdrawal_fixed_pct: targetval});
+        this.setState({withdrawal_fixed_pct: targetval}, this.do_recalc);
     }
 
     handleVariableChange(event) {
         let targetval = parseFloat(event.target.value)
         targetval = isNaN(targetval) ? 0 : targetval;
-        this.setState({withdrawal_variable_pct: targetval});
+        this.setState({withdrawal_variable_pct: targetval}, this.do_recalc);
     }
 
     handleFloorChange(event) {
         let targetval = parseFloat(event.target.value)
         targetval = isNaN(targetval) ? 0 : targetval;
-        this.setState({withdrawal_floor_pct: targetval});
+        this.setState({withdrawal_floor_pct: targetval}, this.do_recalc);
     }
 
     render() {

@@ -11,9 +11,7 @@ class SwrSliders extends Component {
         this.props.mainObj.setState({
             stock_alloc_pct: value,
             bond_alloc_pct: 100 - value,
-        })
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+        }, this.props.mainObj.do_recalc);
     }
 
     onBondsChange = value => {
@@ -21,36 +19,29 @@ class SwrSliders extends Component {
         this.props.mainObj.setState({
             stock_alloc_pct: 100 - value,
             bond_alloc_pct: value,
-        })        
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+        }, this.props.mainObj.do_recalc);
     }
 
     onFixedChange = value => {
         // console.log(value);
         this.props.mainObj.setState({
             withdrawal_fixed_pct: value
-        });
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+        }, this.props.mainObj.do_recalc);
     }
 
     onVariableChange = value => {
         // console.log(value);
         this.props.mainObj.setState({
             withdrawal_variable_pct: value
-        });
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+
+        }, this.props.mainObj.do_recalc);
     }
 
     onFloorChange = value => {
         // console.log(value);
         this.props.mainObj.setState({
             withdrawal_floor_pct: value
-        });
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+        }, this.props.mainObj.do_recalc);
     }
 
     render() {

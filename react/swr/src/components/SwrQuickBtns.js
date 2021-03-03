@@ -18,9 +18,7 @@ class SwrQuickBtns extends Component {
             withdrawal_fixed_pct: 4.0,
             withdrawal_variable_pct: 0.0,
             withdrawal_floor_pct: 4.0
-        });
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+        }, this.props.mainObj.do_recalc);
     }
 
     bengen2() {
@@ -30,9 +28,7 @@ class SwrQuickBtns extends Component {
             withdrawal_fixed_pct: -1.0,
             withdrawal_variable_pct: 5.0,
             withdrawal_floor_pct: 4.0
-        });
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+        }, this.props.mainObj.do_recalc);
     }
 
     ce1() {
@@ -41,10 +37,8 @@ class SwrQuickBtns extends Component {
             bond_alloc_pct: 27.0,
             withdrawal_fixed_pct: 3.5,
             withdrawal_variable_pct: 1.1,
-            withdrawal_floor_pct: 0.0
-        });
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+            withdrawal_floor_pct: 3.8
+        }, this.props.mainObj.do_recalc);
     }
 
     ce2() {
@@ -54,9 +48,7 @@ class SwrQuickBtns extends Component {
             withdrawal_fixed_pct: 0.7,
             withdrawal_variable_pct: 5.8,
             withdrawal_floor_pct: 3.4
-        });
-        this.props.mainObj.calc_profile_df();
-        this.props.mainObj.recalc_cohort_data();
+        }, this.props.mainObj.do_recalc);
     }
 
     render() {
@@ -66,7 +58,7 @@ class SwrQuickBtns extends Component {
                     <div className="col-12 col-md-9">
                             <Button outline color="secondary" onClick={this.bengen1}>Bengen original 4%</Button>
                             &nbsp;
-                            <Button outline color="secondary" onClick={this.bengen2}>Bengen relaxed</Button>
+                            <Button outline color="secondary" onClick={this.bengen2}>Relaxed 4%/5%</Button>
                             &nbsp;
                             <Button outline color="secondary" onClick={this.ce1}>Max CE, high risk aversion</Button>
                             &nbsp;
