@@ -30,7 +30,9 @@ class SwrPlotSpend extends Component {
           yaxis: {title: 'Portfolio Value',
             linecolor: 'black',
             mirror: true,
-            ticks: 'inside'},
+            ticks: 'inside',
+            rangemode: 'tozero'
+          },
           xaxis: {title: 'Year',
             linecolor: 'black',
             mirror: true,
