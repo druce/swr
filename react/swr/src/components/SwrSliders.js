@@ -59,9 +59,12 @@ class SwrSliders extends Component {
 
     render() {
         return(
+            <div className="container">
+            <div className="row ">
+    
             <div className="col-12 col-md-9">
                 <div className="col-12 col-md-8">
-                    <h3 className="text-left">Asset Allocation</h3>
+                    <h3 className="text-left">Asset Allocation:</h3>
                 </div>
                 <Form onSubmit={this.props.mainObj.handleSubmit}>
                 <FormGroup row className="align-items-center">
@@ -92,7 +95,7 @@ class SwrSliders extends Component {
                     </FormGroup>
                     
                     <div className="col-12 col-md-9">
-                        <h3 className="text-left">Annual Withdrawals</h3>
+                        <h3 className="text-left">Annual Withdrawals:</h3>
                     </div>
 
                     <FormGroup row className="align-items-center">
@@ -137,11 +140,13 @@ class SwrSliders extends Component {
                             </Col>
                     </FormGroup>
                     <div className="col-12 col-md-9">
-                        <h3 className="text-left">Historical Outcomes</h3>
+                        <h3 className="text-left">Historical Outcomes:</h3>
                     </div>
 
 
                 </Form>
+            </div>
+            </div>
             </div>
         );
     }

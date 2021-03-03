@@ -15,7 +15,7 @@ class SwrPlots extends Component {
   render() {
     return (
       <div className="container">
-        <div className="row justify-content-center">
+        <div className="row ">
           <div className="swrplots-custom">
               <h5 className="plot-title">Spending Path by Cohort</h5>
               <SwrPlotSpend mainObj={this.props.mainObj} />
