@@ -14,24 +14,26 @@ class SwrPlots extends Component {
 
   render() {
     return (
-        <div className="row row-content">
-            <div className="col-12 col-md-6">
-                <h5 className="plot-title">Spending Path by Cohort</h5>
-                <SwrPlotSpend mainObj={this.props.mainObj} />
-            </div>
-            <div className="col-12 col-md-6">
-                <h5 className="plot-title">Portfolio Path by Cohort</h5>
-                <SwrPlotPortval mainObj={this.props.mainObj} />
-            </div>
-            <div className="col-12 col-md-6">
-                <h5 className="plot-title">Spending v. Portfolio Value</h5>
-                <SwrPlotProfile mainObj={this.props.mainObj} />
-            </div>
-            <div className="col-12 col-md-6">
-                <h5 className="plot-title">Exhaustion Frequency</h5>
-                <SwrPlotSurvival mainObj={this.props.mainObj} />
-            </div>
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="swrplots-custom">
+              <h5 className="plot-title">Spending Path by Cohort</h5>
+              <SwrPlotSpend mainObj={this.props.mainObj} />
           </div>
+          <div className="swrplots-custom">
+              <h5 className="plot-title">Portfolio Path by Cohort</h5>
+              <SwrPlotPortval mainObj={this.props.mainObj} />
+          </div>
+          <div className="swrplots-custom">
+              <h5 className="plot-title">Spending v. Portfolio Value</h5>
+              <SwrPlotProfile mainObj={this.props.mainObj} />
+          </div>
+          <div className="swrplots-custom">
+              <h5 className="plot-title">Exhaustion Frequency</h5>
+              <SwrPlotSurvival mainObj={this.props.mainObj} />
+          </div>
+        </div>
+      </div>
     );
   }
 }
