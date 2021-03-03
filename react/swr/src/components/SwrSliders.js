@@ -61,10 +61,10 @@ class SwrSliders extends Component {
         return(
             <div className="col-12 col-md-9">
                 <div className="col-12 col-md-8">
-                    <h3 className="text-left">Allocation</h3>
+                    <h3 className="text-left">Asset Allocation</h3>
                 </div>
                 <Form onSubmit={this.props.mainObj.handleSubmit}>
-                <FormGroup row>
+                <FormGroup row className="align-items-center">
                             <Label htmlFor="stock_alloc_pct" md={3} className="text-right">Stocks %: {this.props.mainObj.state.stock_alloc_pct}</Label>
                             <Col md={9}>
                                 <Slider 
@@ -77,7 +77,7 @@ class SwrSliders extends Component {
                                 />
                             </Col>
                     </FormGroup>
-                    <FormGroup row>
+                    <FormGroup row className="align-items-center">
                             <Label htmlFor="bond_alloc_pct" md={3} className="text-right">Bonds %: {this.props.mainObj.state.bond_alloc_pct}</Label>
                             <Col md={9}>
                                 <Slider 
@@ -92,10 +92,10 @@ class SwrSliders extends Component {
                     </FormGroup>
                     
                     <div className="col-12 col-md-9">
-                        <h3 className="text-left">Withdrawal</h3>
+                        <h3 className="text-left">Annual Withdrawals</h3>
                     </div>
 
-                    <FormGroup row>
+                    <FormGroup row className="align-items-center">
                             <Label htmlFor="withdrawal_fixed" md={3} className="text-right">Fixed %: {this.props.mainObj.state.withdrawal_fixed_pct}</Label>
                             <Col md={9}>
                                 <Slider 
@@ -109,7 +109,7 @@ class SwrSliders extends Component {
                             </Col>
                     </FormGroup>
 
-                    <FormGroup row>
+                    <FormGroup row className="align-items-center">
                             <Label htmlFor="withdrawal_variable" md={3} className="text-right">Variable %: {this.props.mainObj.state.withdrawal_variable_pct}</Label>
                             <Col md={9}>
                                 <Slider 
@@ -123,7 +123,7 @@ class SwrSliders extends Component {
                             </Col>
                     </FormGroup>
 
-                    <FormGroup row>
+                    <FormGroup row className="align-items-center">
                             <Label htmlFor="withdrawal_floor" md={3} className="text-right">Floor %: {this.props.mainObj.state.withdrawal_floor_pct}</Label>
                             <Col md={9}>
                                 <Slider 
@@ -136,6 +136,10 @@ class SwrSliders extends Component {
                                 />
                             </Col>
                     </FormGroup>
+                    <div className="col-12 col-md-9">
+                        <h3 className="text-left">Historical Outcomes</h3>
+                    </div>
+
 
                 </Form>
             </div>
