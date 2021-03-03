@@ -73,6 +73,7 @@ class SwrSliders extends Component {
                                     max={100} 
                                     step={1}
                                     onChange={this.onStocksChange}
+                                    id="stock_alloc_pct"
                                 />
                             </Col>
                     </FormGroup>
@@ -85,6 +86,7 @@ class SwrSliders extends Component {
                                     max={100} 
                                     step={1}
                                     onChange={this.onBondsChange}
+                                    id="bond_alloc_pct"
                                 />
                             </Col>
                     </FormGroup>
@@ -99,9 +101,10 @@ class SwrSliders extends Component {
                                 <Slider 
                                     value={this.props.mainObj.state.withdrawal_fixed_pct}
                                     min={0} 
-                                    max={5} 
+                                    max={6} 
                                     step={0.1}
                                     onChange={this.onFixedChange}
+                                    id="withdrawal_fixed"
                                 />
                             </Col>
                     </FormGroup>
@@ -115,6 +118,7 @@ class SwrSliders extends Component {
                                     max={10} 
                                     step={0.1}
                                     onChange={this.onVariableChange}
+                                    id="withdrawal_variable"
                                 />
                             </Col>
                     </FormGroup>
@@ -125,9 +129,10 @@ class SwrSliders extends Component {
                                 <Slider 
                                     value={this.props.mainObj.state.withdrawal_floor_pct}
                                     min={0} 
-                                    max={5} 
+                                    max={6} 
                                     step={0.1}
                                     onChange={this.onFloorChange}
+                                    id="withdrawal_floor"                                    
                                 />
                             </Col>
                     </FormGroup>
