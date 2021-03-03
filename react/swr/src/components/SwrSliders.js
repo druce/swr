@@ -53,10 +53,6 @@ class SwrSliders extends Component {
         this.props.mainObj.recalc_cohort_data();
     }
 
-    // onAfterChange = value => {
-    //     // console.log(value);
-    // };
-
     render() {
         return(
             <div className="container">
@@ -76,6 +72,7 @@ class SwrSliders extends Component {
                                     max={100} 
                                     step={1}
                                     onChange={this.onStocksChange}
+                                    onAfterChange={this.onStocksChange}
                                     id="stock_alloc_pct"
                                 />
                             </Col>
@@ -89,6 +86,7 @@ class SwrSliders extends Component {
                                     max={100} 
                                     step={1}
                                     onChange={this.onBondsChange}
+                                    onAfterChange={this.onBondsChange}
                                     id="bond_alloc_pct"
                                 />
                             </Col>
@@ -103,10 +101,11 @@ class SwrSliders extends Component {
                             <Col md={9}>
                                 <Slider 
                                     value={this.props.mainObj.state.withdrawal_fixed_pct}
-                                    min={0} 
+                                    min={-6} 
                                     max={6} 
                                     step={0.1}
                                     onChange={this.onFixedChange}
+                                    onAfterChange={this.onFixedChange}
                                     id="withdrawal_fixed"
                                 />
                             </Col>
@@ -121,6 +120,7 @@ class SwrSliders extends Component {
                                     max={10} 
                                     step={0.1}
                                     onChange={this.onVariableChange}
+                                    onAfterChange={this.onVariableChange}
                                     id="withdrawal_variable"
                                 />
                             </Col>
@@ -135,6 +135,7 @@ class SwrSliders extends Component {
                                     max={6} 
                                     step={0.1}
                                     onChange={this.onFloorChange}
+                                    onAfterChange={this.onFloorChange}
                                     id="withdrawal_floor"                                    
                                 />
                             </Col>

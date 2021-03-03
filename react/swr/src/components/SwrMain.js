@@ -9,6 +9,7 @@ import { SPEND_DF } from '../js/spend_df.js';
 import { PORTVAL_DF } from '../js/portval_df.js';
 import { PROFILE_DF } from '../js/profile_df.js';
 import { SURVIVAL_DF } from '../js/survival_df.js';
+import SwrQuickBtns from './SwrQuickBtns';
 
 // sort arr1 per order in arr2
 // const dsu = (arr1, arr2) => {
@@ -187,6 +188,7 @@ export class SwrMain extends Component {
         return (
             <div>
                 <SwrHeader />
+                <SwrQuickBtns mainObj={this} />
                 <SwrSliders mainObj={this} />
                 <SwrDescription {...this.state} />
                 <SwrPlots mainObj={this} />
