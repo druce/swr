@@ -44,8 +44,8 @@ export class SwrMain extends Component {
         this.calc_profile_df = this.calc_profile_df.bind(this);
         this.recalc_cohort_data = this.recalc_cohort_data.bind(this);
 
-        this.recalc_cohort_data();
         this.calc_profile_df();
+        this.recalc_cohort_data();
     }
 
     calc_profile_df() {
