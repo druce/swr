@@ -10,15 +10,13 @@ class SwrHeader extends Component {
                  <div className="row row-header">
                      <div className="col-12 text-left">
                         <h1>Safe Withdrawal for Retirement Calculator</h1>
-                        <p>Show all historical paths for 30-year retirements 1928-1991 based on specified asset allocation and withdrawal parameters.</p>
-                        <p>Drag the sliders to adjust parameters:</p>
+                        <p>Show all historical paths for 30-year retirements 1928-1991 based on specified asset allocation and withdrawal parameters. Drag the sliders to adjust parameters:</p>
                         <ul>
-                        <li>Asset allocation: Fixed stock/bond percentage throughout retirement.</li>
+                        <li>Asset allocation: A fixed stock/bond percentage throughout retirement.</li>
                         <li>Withdrawals:
                             <ul>
-                                <li>Each year, withdraw a fixed percentage (Fixed %) of the starting portfolio <span class="font-italic">plus</span> a percentage of the current portfolio (Variable %), or</li>
-                                <li>A floor percentage (Floor %) of the starting portfolio, whichever is greater</li>
-                                <li>The spending profile chart illustrates spending for a given current portfolio.</li>
+                                <li>Each year, withdraw a fixed percentage (Fixed %) of the starting portfolio <span class="font-italic">plus</span> a percentage of the current portfolio (Variable %), or…</li>
+                                <li>a floor percentage (Floor %) of the starting portfolio, whichever is greater</li>
                             </ul>
                             </li>
                         </ul>

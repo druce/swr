@@ -1,11 +1,20 @@
 import React, { Component } from 'react';
-import { Form, FormGroup, Label, Col} from 'reactstrap';
+import { Form, FormGroup, Col, Label, Button} from 'reactstrap';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import '../css/SwrSliders.css';
 
 class SwrSliders extends Component {
 
+    constructor(props) {
+        super(props);
+        this.bengen1 = this.bengen1.bind(this);
+        this.bengen2 = this.bengen2.bind(this);
+        this.ce1 = this.ce1.bind(this);
+        this.ce2 = this.ce2.bind(this);
+    }
+
+    // slider callbacks
     onStocksChange = value => {
         // console.log(value);
         this.props.mainObj.setState({
@@ -41,6 +50,47 @@ class SwrSliders extends Component {
         // console.log(value);
         this.props.mainObj.setState({
             withdrawal_floor_pct: value
+        }, this.props.mainObj.do_recalc);
+    }
+
+    // quick button callbacks
+    bengen1() {
+        this.props.mainObj.setState({
+            stock_alloc_pct: 50.0,
+            bond_alloc_pct: 50.0,
+            withdrawal_fixed_pct: 4.0,
+            withdrawal_variable_pct: 0.0,
+            withdrawal_floor_pct: 4.0
+        }, this.props.mainObj.do_recalc);
+    }
+
+    bengen2() {
+        this.props.mainObj.setState({
+            stock_alloc_pct: 50.0,
+            bond_alloc_pct: 50.0,
+            withdrawal_fixed_pct: -1.0,
+            withdrawal_variable_pct: 5.0,
+            withdrawal_floor_pct: 4.0
+        }, this.props.mainObj.do_recalc);
+    }
+
+    ce1() {
+        this.props.mainObj.setState({
+            stock_alloc_pct: 73.0,
+            bond_alloc_pct: 27.0,
+            withdrawal_fixed_pct: 3.5,
+            withdrawal_variable_pct: 1.1,
+            withdrawal_floor_pct: 3.8
+        }, this.props.mainObj.do_recalc);
+    }
+
+    ce2() {
+        this.props.mainObj.setState({
+            stock_alloc_pct: 89.0,
+            bond_alloc_pct: 11.0,
+            withdrawal_fixed_pct: 0.7,
+            withdrawal_variable_pct: 5.8,
+            withdrawal_floor_pct: 3.4
         }, this.props.mainObj.do_recalc);
     }
 
@@ -131,6 +181,20 @@ class SwrSliders extends Component {
                                 />
                             </Col>
                     </FormGroup>
+                    <div className="container">
+                    <div className="row ">
+                        <div className="col-12">
+                                <Button outline color="secondary" onClick={this.bengen1}>Bengen original 4%</Button>
+                                &nbsp;
+                                <Button outline color="secondary" onClick={this.bengen2}>Relaxed 4%/5%</Button>
+                                &nbsp;
+                                <Button outline color="secondary" onClick={this.ce1}>Max CE, high risk aversion</Button>
+                                &nbsp;
+                                <Button outline color="secondary" onClick={this.ce2}>Max CE, medium risk aversion</Button>
+                        </div>
+                    </div>
+            </div>
+
                     <div className="col-12 col-md-9">
                         <h3 className="text-left">Historical Outcomes:</h3>
                     </div>

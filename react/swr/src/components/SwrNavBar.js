@@ -24,10 +24,11 @@ const SwrNavBar = (props) => {
   const toggle = () => setIsOpen(!isOpen);
 
   return (
-    <div>
+    <div>>
       <Navbar className="navbar-custom" expand="md">
-        <NavbarBrand className="navbar-brand-custom" href="https://druce.ai/">Druce.ai</NavbarBrand>
+      <div className="container">
         <NavbarToggler onClick={toggle} />
+        <NavbarBrand className="navbar-brand-custom" href="https://druce.ai/">Druce.ai</NavbarBrand>
         <Collapse isOpen={isOpen} navbar>
             <Nav className="ml-auto navbar-custom" navbar>
                 <NavItem className="navbar-custom">
@@ -57,6 +58,7 @@ const SwrNavBar = (props) => {
                 </NavItem>
             </Nav>
         </Collapse>
+        </div>
       </Navbar>
     </div>
   );
