@@ -188,14 +188,15 @@ class SwrSliders extends Component {
                                 &nbsp;
                                 <Button outline color="secondary" onClick={this.bengen2}>Relaxed 4%/5%</Button>
                                 &nbsp;
-                                <Button outline color="secondary" onClick={this.ce1}>Max CE, high risk aversion</Button>
+                                <Button outline color="secondary" onClick={this.ce1}>Max CE w/high risk aversion</Button>
                                 &nbsp;
-                                <Button outline color="secondary" onClick={this.ce2}>Max CE, medium risk aversion</Button>
+                                <Button outline color="secondary" onClick={this.ce2}>Max CE w/low risk aversion</Button>
                         </div>
                     </div>
             </div>
 
                     <div className="col-12 col-md-9">
+                        &nbsp; <br />
                         <h3 className="text-left">Historical Outcomes:</h3>
                     </div>
 

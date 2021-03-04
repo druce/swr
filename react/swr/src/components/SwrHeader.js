@@ -15,13 +15,13 @@ class SwrHeader extends Component {
                         <li>Asset allocation: A fixed stock/bond percentage throughout retirement.</li>
                         <li>Withdrawals:
                             <ul>
-                                <li>Each year, withdraw a fixed percentage (Fixed %) of the starting portfolio <span class="font-italic">plus</span> a percentage of the current portfolio (Variable %), or…</li>
+                                <li>Each year, withdraw a fixed percentage (Fixed %) of the starting portfolio <span className="font-italic">plus</span> a percentage of the current portfolio (Variable %), or…</li>
                                 <li>a floor percentage (Floor %) of the starting portfolio, whichever is greater</li>
                             </ul>
                             </li>
                         </ul>
                         <p>See this <a href="https://druce.ai/2021/02/optimal-safe-withdrawal-for-retirement-using-certainty-equivalent-spending-revisited">blog post</a> for detailed discussion.</p>
-	                    <p class="font-italic">Disclaimer: This is not investment advice! For educational purposes only. Past performance may not be representative of future results. Consult a professional for investment and retirement advice.</p>
+	                    <p className="font-italic">Disclaimer: This is not investment advice! For educational purposes only. Past performance may not be representative of future results. Consult a professional for investment and retirement advice.</p>
                      </div>
                  </div>
              </div>

@@ -42,14 +42,14 @@ const SwrNavBar = (props) => {
                         <DropdownItem href="http://www.streeteye.com/static/Pizza/">
                         Pizza Pizza Pizza
                         </DropdownItem>
+                        <DropdownItem href="http://www.streeteye.com/static/swr">
+                        Safe Withdrawal Retirement Calculator
+                        </DropdownItem>
                         <DropdownItem href="http://www.streeteye.com/namegenerator/">
                         Hedge Fund Name Generator
                         </DropdownItem>
                         <DropdownItem href="http://www.streeteye.com/static/fintwit201901/">
                         FinTwit Graph
-                        </DropdownItem>
-                        <DropdownItem href="http://www.streeteye.com/calculator/">
-                        Cat Food Calculator
                         </DropdownItem>
                     </DropdownMenu>
                 </UncontrolledDropdown>

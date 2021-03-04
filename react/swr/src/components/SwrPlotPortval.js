@@ -17,7 +17,8 @@ class SwrPlotSpend extends Component {
         type: 'scatter',
         mode: 'lines',
         color: df.data[i][df.data[i].length],
-        line: {'width': 1}        
+        line: {'width': 1},
+        hovertemplate: '<b>Year</b> %{x} <b>Value</b>: %{y:.4f} ',
       }); 
     }
     return (
@@ -27,11 +28,13 @@ class SwrPlotSpend extends Component {
           height: 300, 
           showlegend: false,
           title: false,
+          hovermode: 'closest',
           yaxis: {title: 'Portfolio Value',
             linecolor: 'black',
             mirror: true,
             ticks: 'inside',
-            rangemode: 'tozero'
+            range: [0,400]
+            // rangemode: 'tozero'
           },
           xaxis: {title: 'Year',
             linecolor: 'black',
