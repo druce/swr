@@ -17,11 +17,11 @@ class SwrPlots extends Component {
       <div className="container">
         <div className="row ">
           <div className="swrplots-custom">
-              <h5 className="plot-title">Spending Path by Cohort</h5>
+              <h5 className="plot-title">Spending Path for Retirement Cohorts 1928-1991</h5>
               <SwrPlotSpend mainObj={this.props.mainObj} />
           </div>
           <div className="swrplots-custom">
-              <h5 className="plot-title">Portfolio Path by Cohort</h5>
+              <h5 className="plot-title">Portfolio Path for Retirement Cohorts 1928-1991</h5>
               <SwrPlotPortval mainObj={this.props.mainObj} />
           </div>
           <div className="swrplots-custom">

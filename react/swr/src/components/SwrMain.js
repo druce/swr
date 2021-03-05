@@ -26,8 +26,12 @@ export class SwrMain extends Component {
             bond_alloc_pct: 50.0,
             withdrawal_fixed_pct: 2.0,
             withdrawal_variable_pct: 2.5,
-            withdrawal_floor_pct: 3.5,
+            withdrawal_floor_pct: 4.0,
+            start_spend: 4.5,
             n_ret_years: 30,
+            mean_spend: 5.3,
+            worst_spend: 2.4,
+            pct_exhausted: 1.6,
             real_return_df: REAL_RETURN_DF,
             spend_df: SPEND_DF,
             portval_df: PORTVAL_DF,
@@ -46,6 +50,10 @@ export class SwrMain extends Component {
 
         this.do_recalc();
     }
+
+    listmean(array) {
+        return array.reduce((a, b) => a + b) / array.length;
+    } 
 
     calc_profile_df() {
         let portvals = [];
@@ -85,10 +93,15 @@ export class SwrMain extends Component {
             ]
         }
 
+        let mean_spendvals = [];
+        let min_spendvals = [];
+        let n_exhausted = 0;
+
         for (let cohort_start=0; cohort_start<n_cohorts; cohort_start++) {
             let portval = 100.0;
             let portvals = [];
             let spendvals = [];
+
             portvals.push(portval);
             let exhausted = false;
             for (let cohort_year=0; cohort_year<n_ret_years; cohort_year++) {
@@ -104,43 +117,41 @@ export class SwrMain extends Component {
                 if (portval === 0) {
                     if (!exhausted) {
                         exhausted = true;
+                        n_exhausted++;
                         new_survival_df.data[0][cohort_year]++;
                     }
                 }
             }
             spendvaldata.push(spendvals);
+            mean_spendvals.push(this.listmean(spendvals));
+            min_spendvals.push(Math.min.apply(Math, spendvals));
+
             portvaldata.push(portvals);
             if (!exhausted) {
                 new_survival_df.data[0][n_ret_years]++;
             }
         }
-        // resort per ending portval
-        // let final_portvals = [];
-        // let final_portval_indexes = [];        
-        // for (let i = 0; i < portvaldata.length; i++) {
-        //     final_portval_indexes.push(i);
-        //     final_portvals.push(portvaldata[i][portvaldata[i].length-1]);
-        // }
-        // console.log(final_portvals);
-        // let new_order = dsu(final_portval_indexes, final_portvals);
-        // console.log(new_order);
-
-        // let new_spendvaldata = [];
-        // let new_portvaldata = [];
-        // for (let i = 0; i < new_order.length; i++) {
-        //     new_spendvaldata.push(spendvaldata[new_order[i]]);
-        //     new_portvaldata.push(portvaldata[new_order[i]]);
-        // }
 
         let new_spend_df = Object.assign(this.state.spend_df);
         new_spend_df.data = spendvaldata;
-        this.setState({spend_df: new_spend_df});
 
         let new_portval_df = Object.assign(this.state.portval_df);
         new_portval_df.data = portvaldata;
-        this.setState({portval_df: new_portval_df});
 
-        this.setState({survival_df: new_survival_df});
+        let mean_spend = this.listmean(mean_spendvals).toFixed(1);
+        let worst_spend = Math.min.apply(Math, min_spendvals).toFixed(1);
+        let pct_exhausted = (n_exhausted / n_cohorts * 100).toFixed(1);
+        let start_spend = Math.max(this.state.withdrawal_fixed_pct + this.state.withdrawal_variable_pct, this.state.withdrawal_floor_pct);
+
+        this.setState({
+            spend_df: new_spend_df,
+            portval_df: new_portval_df,
+            survival_df: new_survival_df,
+            start_spend: start_spend,
+            mean_spend: mean_spend,
+            worst_spend: worst_spend,
+            pct_exhausted: pct_exhausted,
+        });
         
     }
 

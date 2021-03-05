@@ -16,14 +16,15 @@ class SwrPlotSpend extends Component {
     let n_cohorts = df.data.length;
     let plotly_data = [];
 
-    // find min and max ending values
+    // find mean, min, max ending values
     let lastvals = [];
     for(let i=0; i<n_cohorts; i++) {
-      lastvals.push(df.data[i][df.data[i].length - 1]);
+      let spend = df.data[i];
+      lastvals.push(spend[spend.length - 1]);
     }
     let last_low = Math.min.apply(Math, lastvals)
     let last_high = Math.max.apply(Math, lastvals)
-    
+
     for(let i=0; i<n_cohorts; i++) {
       let lastval_color = this.getcolor(df.data[i][df.data[i].length - 1], last_low, last_high);
       plotly_data.push({
