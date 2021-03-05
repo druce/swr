@@ -32,6 +32,7 @@ export class SwrMain extends Component {
             mean_spend: 5.3,
             worst_spend: 2.4,
             pct_exhausted: 1.6,
+            highlighted_index: -1,
             real_return_df: REAL_RETURN_DF,
             spend_df: SPEND_DF,
             portval_df: PORTVAL_DF,

@@ -24,7 +24,7 @@ const SwrNavBar = (props) => {
   const toggle = () => setIsOpen(!isOpen);
 
   return (
-    <div>>
+    <div>
       <Navbar className="navbar-custom" expand="md">
       <div className="container">
         <NavbarToggler onClick={toggle} />

@@ -1,6 +1,7 @@
 // import { data } from 'jquery';
 import React, { Component } from 'react';
 import Plot from 'react-plotly.js';
+import Plotly from 'plotly.js/dist/plotly'
 
 class SwrPlotSpend extends Component {
 
@@ -24,25 +25,29 @@ class SwrPlotSpend extends Component {
     }
     let last_low = Math.min.apply(Math, lastvals)
     let last_high = Math.max.apply(Math, lastvals)
+    let line_options = {};
 
     for(let i=0; i<n_cohorts; i++) {
-      let lastval_color = this.getcolor(df.data[i][df.data[i].length - 1], last_low, last_high);
+      if (i==this.props.mainObj.state.highlight_index)
+        line_options = {'width': 3, 'color': 'black'};
+      else 
+        line_options = {'width': 1, 'color': this.getcolor(df.data[i][df.data[i].length - 1], last_low, last_high)};
+
       plotly_data.push({
         x: df.columns,
         y: df.data[i],
-        hovertemplate: '<b>Year</b> %{x} <b>Value</b>: %{y:.4f} ',
+        hovertemplate: '<b>Year</b> %{x} <b>Spend</b>: %{y:.4f} ',
         // text = ['{}'.format(i + 1928) for i in range(len(spend_df))],        
         name: df.index[i],
         type: 'scatter',
         mode: 'lines',
-        line: {
-          'width': 1,
-          'color': lastval_color
-        },
-      }); 
-    }
+        line: line_options
+      });
+    } 
+
     return (
       <Plot
+        divId='spend_plot'
         data={plotly_data}
         layout={{width: 480,
           height: 300, 
@@ -70,8 +75,18 @@ class SwrPlotSpend extends Component {
           autocolorscale: false,
           colorscale: 'Viridis',
         }
-        }
-      />
+        }      
+        onClick = {(arg) => {
+          // var update = {
+          //   opacity: 1,
+          //   'line.width': 3,
+          // };
+          // // console.log(arg.points[0].curveNumber);
+          // Plotly.restyle('spend_plot', update, arg.points[0].curveNumber);
+          this.props.mainObj.setState({highlight_index: arg.points[0].curveNumber});
+
+        }}
+          />
     );
   }
 }

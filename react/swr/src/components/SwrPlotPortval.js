@@ -1,6 +1,7 @@
 // import { data } from 'jquery';
 import React, { Component } from 'react';
 import Plot from 'react-plotly.js';
+import Plotly from 'plotly.js/dist/plotly'
 
 class SwrPlotSpend extends Component {
 
@@ -23,9 +24,13 @@ class SwrPlotSpend extends Component {
     }
     let last_low = Math.min.apply(Math, lastvals)
     let last_high = Math.max.apply(Math, lastvals)
+    let line_options =  {}
     
     for(var i=0; i<n_cohorts; i++) {
-      let lastval_color = this.getcolor(df.data[i][df.data[i].length - 1], last_low, last_high);
+      if (i==this.props.mainObj.state.highlight_index)
+        line_options = {'width': 2, 'color': 'black'};
+      else 
+        line_options = {'width': 1, 'color': this.getcolor(df.data[i][df.data[i].length - 1], last_low, last_high)};
 
       plotly_data.push({
         x: df.columns,
@@ -34,13 +39,14 @@ class SwrPlotSpend extends Component {
         type: 'scatter',
         mode: 'lines',
         color: df.data[i][df.data[i].length],
-        line: {'width': 1, 'color': lastval_color},
+        line: line_options,
         hovertemplate: '<b>Year</b> %{x} <b>Value</b>: %{y:.4f} ',
-      }); 
+      });   
     }
     return (
       <Plot
-        data={plotly_data}
+      divId='portval_plot'
+      data={plotly_data}
         layout={{width: 480,
           height: 300, 
           showlegend: false,
@@ -63,8 +69,19 @@ class SwrPlotSpend extends Component {
             l: 50,
             b: 40,
             pad: 0
-          }}
+          }}          
         }
+        onClick = {(arg) => {
+          // var update = {
+          //   opacity: 1,
+          //   'line.width': 4,
+          //   'line.color': 'black',
+          // };
+          // // console.log(arg.points[0].curveNumber);
+          // Plotly.restyle('portval_plot', update, arg.points[0].curveNumber);
+          this.props.mainObj.setState({highlight_index: arg.points[0].curveNumber});
+        }}
+
       />
     );
   }
