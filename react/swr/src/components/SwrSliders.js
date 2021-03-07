@@ -103,9 +103,9 @@ class SwrSliders extends Component {
                 <div className="col-12 col-md-8">
                     <h3 className="text-left">Asset Allocation:</h3>
                 </div>
-                <Form onSubmit={this.props.mainObj.handleSubmit}>
+                <Form onSubmit={this.props.mainObj.handleSubmit} classID="sliderForm">
                 <FormGroup row className="align-items-center">
-                            <Label htmlFor="stock_alloc_pct" md={3} className="text-right">Stocks %: {this.props.mainObj.state.stock_alloc_pct}</Label>
+                            <Label data-testid="stock_alloc_pct_label" htmlFor="stock_alloc_pct" md={3} className="text-right">Stocks %: {this.props.mainObj.state.stock_alloc_pct}</Label>
                             <Col md={9}>
                                 <Slider 
                                     value={this.props.mainObj.state.stock_alloc_pct}
@@ -114,12 +114,11 @@ class SwrSliders extends Component {
                                     step={1}
                                     onChange={this.onStocksChange}
                                     onAfterChange={this.onStocksChange}
-                                    id="stock_alloc_pct"
                                 />
                             </Col>
                     </FormGroup>
                     <FormGroup row className="align-items-center">
-                            <Label htmlFor="bond_alloc_pct" md={3} className="text-right">Bonds %: {this.props.mainObj.state.bond_alloc_pct}</Label>
+                            <Label data-testid="bond_alloc_pct_label" htmlFor="bond_alloc_pct" md={3} className="text-right">Bonds %: {this.props.mainObj.state.bond_alloc_pct}</Label>
                             <Col md={9}>
                                 <Slider 
                                     value={this.props.mainObj.state.bond_alloc_pct}
@@ -128,7 +127,6 @@ class SwrSliders extends Component {
                                     step={1}
                                     onChange={this.onBondsChange}
                                     onAfterChange={this.onBondsChange}
-                                    id="bond_alloc_pct"
                                 />
                             </Col>
                     </FormGroup>
@@ -138,7 +136,7 @@ class SwrSliders extends Component {
                     </div>
 
                     <FormGroup row className="align-items-center">
-                            <Label htmlFor="withdrawal_fixed" md={3} className="text-right">Fixed %: {this.props.mainObj.state.withdrawal_fixed_pct}</Label>
+                            <Label data-testid="withdrawal_fixed_label" htmlFor="withdrawal_fixed" md={3} className="text-right">Fixed %: {this.props.mainObj.state.withdrawal_fixed_pct}</Label>
                             <Col md={9}>
                                 <Slider 
                                     value={this.props.mainObj.state.withdrawal_fixed_pct}
@@ -147,13 +145,12 @@ class SwrSliders extends Component {
                                     step={0.1}
                                     onChange={this.onFixedChange}
                                     onAfterChange={this.onFixedChange}
-                                    id="withdrawal_fixed"
                                 />
                             </Col>
                     </FormGroup>
 
                     <FormGroup row className="align-items-center">
-                            <Label htmlFor="withdrawal_variable" md={3} className="text-right">Variable %: {this.props.mainObj.state.withdrawal_variable_pct}</Label>
+                            <Label data-testid="withdrawal_variable_label" htmlFor="withdrawal_variable" md={3} className="text-right">Variable %: {this.props.mainObj.state.withdrawal_variable_pct}</Label>
                             <Col md={9}>
                                 <Slider 
                                     value={this.props.mainObj.state.withdrawal_variable_pct}
@@ -162,13 +159,12 @@ class SwrSliders extends Component {
                                     step={0.1}
                                     onChange={this.onVariableChange}
                                     onAfterChange={this.onVariableChange}
-                                    id="withdrawal_variable"
                                 />
                             </Col>
                     </FormGroup>
 
                     <FormGroup row className="align-items-center">
-                            <Label htmlFor="withdrawal_floor" md={3} className="text-right">Floor %: {this.props.mainObj.state.withdrawal_floor_pct}</Label>
+                            <Label data-testid="withdrawal_floor_label" htmlFor="withdrawal_floor" md={3} className="text-right">Floor %: {this.props.mainObj.state.withdrawal_floor_pct}</Label>
                             <Col md={9}>
                                 <Slider 
                                     value={this.props.mainObj.state.withdrawal_floor_pct}
@@ -177,20 +173,19 @@ class SwrSliders extends Component {
                                     step={0.1}
                                     onChange={this.onFloorChange}
                                     onAfterChange={this.onFloorChange}
-                                    id="withdrawal_floor"                                    
                                 />
                             </Col>
                     </FormGroup>
                     <div className="container">
                     <div className="row ">
                         <div className="col-12">
-                                <Button outline color="secondary" onClick={this.bengen1}>Bengen original 4%</Button>
+                                <Button data-testid="button1" outline color="secondary" onClick={this.bengen1}>Bengen original 4%</Button>
                                 &nbsp;
-                                <Button outline color="secondary" onClick={this.bengen2}>Relaxed 4%/5%</Button>
+                                <Button data-testid="button2" outline color="secondary" onClick={this.bengen2}>Relaxed 4%/5%</Button>
                                 &nbsp;
-                                <Button outline color="secondary" onClick={this.ce1}>Max CE w/high risk aversion</Button>
+                                <Button data-testid="button3" outline color="secondary" onClick={this.ce1}>Max CE w/high risk aversion</Button>
                                 &nbsp;
-                                <Button outline color="secondary" onClick={this.ce2}>Max CE w/low risk aversion</Button>
+                                <Button  data-testid="button4" outline color="secondary" onClick={this.ce2}>Max CE w/low risk aversion</Button>
                         </div>
                     </div>
             </div>

@@ -49,8 +49,12 @@ export class SwrMain extends Component {
         this.calc_profile_df = this.calc_profile_df.bind(this);
         this.recalc_cohort_data = this.recalc_cohort_data.bind(this);
 
+    }
+
+    componentDidMount() {
         this.do_recalc();
     }
+
 
     listmean(array) {
         return array.reduce((a, b) => a + b) / array.length;
@@ -142,7 +146,7 @@ export class SwrMain extends Component {
         let mean_spend = this.listmean(mean_spendvals).toFixed(1);
         let worst_spend = Math.min.apply(Math, min_spendvals).toFixed(1);
         let pct_exhausted = (n_exhausted / n_cohorts * 100).toFixed(1);
-        let start_spend = Math.max(this.state.withdrawal_fixed_pct + this.state.withdrawal_variable_pct, this.state.withdrawal_floor_pct);
+        let start_spend = Math.max(this.state.withdrawal_fixed_pct + this.state.withdrawal_variable_pct, this.state.withdrawal_floor_pct).toFixed(1);
 
         this.setState({
             spend_df: new_spend_df,

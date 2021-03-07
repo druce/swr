@@ -1,7 +1,7 @@
 // import { data } from 'jquery';
 import React, { Component } from 'react';
 import Plot from 'react-plotly.js';
-import Plotly from 'plotly.js/dist/plotly'
+// import Plotly from 'plotly.js/dist/plotly'
 
 class SwrPlotSpend extends Component {
 
@@ -28,8 +28,8 @@ class SwrPlotSpend extends Component {
     let line_options = {};
 
     for(let i=0; i<n_cohorts; i++) {
-      if (i==this.props.mainObj.state.highlight_index)
-        line_options = {'width': 3, 'color': 'black'};
+      if (i===this.props.mainObj.state.highlight_index)
+        line_options = {'width': 2, 'color': 'black'};
       else 
         line_options = {'width': 1, 'color': this.getcolor(df.data[i][df.data[i].length - 1], last_low, last_high)};
 

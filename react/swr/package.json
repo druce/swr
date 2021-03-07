@@ -1,75 +1,77 @@
 {
-    "name": "swr",
-    "version": "0.1.0",
-    "description": "safe withdrawal for retirement calculator",
-    "main": "index.html",
-    "private": false,
-    "dependencies": {
-	"@fortawesome/fontawesome-svg-core": "^1.2.34",
-	"@fortawesome/free-brands-svg-icons": "^5.15.2",
-	"@fortawesome/free-regular-svg-icons": "^5.15.2",
-	"@fortawesome/free-solid-svg-icons": "^5.15.2",
-	"@fortawesome/react-fontawesome": "^0.1.14",
-	"@testing-library/jest-dom": "^5.11.4",
-	"@testing-library/react": "^11.1.0",
-	"@testing-library/user-event": "^12.1.10",
-	"bootstrap": "^4.6.0",
-	"jquery": "^3.5.1",
-	"plotly.js": "^1.58.4",
-	"popper.js": "^1.16.1",
-	"rc-slider": "^9.7.1",
-	"react": "^17.0.1",
-	"react-dom": "^17.0.1",
-	"react-plotly.js": "^2.5.1",
-	"react-popper": "^2.2.4",
-	"react-scripts": "4.0.3",
-	"reactstrap": "^8.9.0",
-	"source-map-explorer": "^2.5.2",
-	"testing-library": "^0.0.2",
-	"typescript": "^4.2.2",
-	"web-vitals": "^1.0.1"
-    },
-    "scripts": {
-	"startserver": "react-scripts start",
-	"build": "react-scripts build",
-	"test": "react-scripts test",
-	"eject": "react-scripts eject",
-	"scss": "node-sass -o src/css/ src/css/",
-	"watch:scss": "onchange 'src/css/*.scss' -- yarn run scss",
-	"start": "parallelshell 'yarn startserver' 'yarn watch:scss'",
-	"analyze": "source-map-explorer 'build/static/js/*.js'"
-    },
-    "eslintConfig": {
-	"extends": [
-	    "react-app",
-	    "react-app/jest"
-	]
-    },
-    "browserslist": {
-	"production": [
-	    ">0.2%",
-	    "not dead",
-	    "not op_mini all"
-	],
-	"development": [
-	    "last 1 chrome version",
-	    "last 1 firefox version",
-	    "last 1 safari version"
-	]
-    },
-    "devDependencies": {
-	"browser-sync": "^2.26.14",
-	"gulp": "^4.0.2",
-	"gulp-sass": "^4.1.0",
-	"node-sass": "^5.0.0",
-	"onchange": "^7.1.0",
-	"parallelshell": "^3.0.2"
-    },
-    "repository": {
-	"type": "git",
-	"url": "git+https://github.com/druce/swr"
-    },
-    "author": "Druce Vertes",
-    "license": "MIT",
-    "homepage": "http://www.streeteye.com/static/swr/"
+			"name": "swr",
+			"version": "0.1.0",
+			"description": "safe withdrawal for retirement calculator",
+			"main": "index.html",
+			"private": false,
+			"dependencies": {
+						"@fortawesome/fontawesome-svg-core": "^1.2.34",
+						"@fortawesome/free-brands-svg-icons": "^5.15.2",
+						"@fortawesome/free-regular-svg-icons": "^5.15.2",
+						"@fortawesome/free-solid-svg-icons": "^5.15.2",
+						"@fortawesome/react-fontawesome": "^0.1.14",
+						"@testing-library/jest-dom": "^5.11.4",
+						"@testing-library/react": "^11.1.0",
+						"@testing-library/user-event": "^12.1.10",
+						"bootstrap": "^4.6.0",
+						"canvas": "^2.7.0",
+						"jest-canvas-mock": "^2.3.1",
+						"jquery": "^3.5.1",
+						"plotly.js": "^1.58.4",
+						"popper.js": "^1.16.1",
+						"rc-slider": "^9.7.1",
+						"react": "^17.0.1",
+						"react-dom": "^17.0.1",
+						"react-plotly.js": "^2.5.1",
+						"react-popper": "^2.2.4",
+						"react-scripts": "4.0.3",
+						"reactstrap": "^8.9.0",
+						"source-map-explorer": "^2.5.2",
+						"testing-library": "^0.0.2",
+						"typescript": "^4.2.2",
+						"web-vitals": "^1.0.1"
+			},
+			"scripts": {
+						"startserver": "react-scripts start",
+						"build": "react-scripts build",
+						"test": "react-scripts test",
+						"eject": "react-scripts eject",
+						"scss": "node-sass -o src/css/ src/css/",
+						"watch:scss": "onchange 'src/css/*.scss' -- yarn run scss",
+						"start": "parallelshell 'yarn startserver' 'yarn watch:scss'",
+						"analyze": "source-map-explorer 'build/static/js/*.js'"
+			},
+			"eslintConfig": {
+						"extends": [
+									"react-app",
+									"react-app/jest"
+						]
+			},
+			"browserslist": {
+						"production": [
+									">0.2%",
+									"not dead",
+									"not op_mini all"
+						],
+						"development": [
+									"last 1 chrome version",
+									"last 1 firefox version",
+									"last 1 safari version"
+						]
+			},
+			"devDependencies": {
+						"browser-sync": "^2.26.14",
+						"gulp": "^4.0.2",
+						"gulp-sass": "^4.1.0",
+						"node-sass": "^5.0.0",
+						"onchange": "^7.1.0",
+						"parallelshell": "^3.0.2"
+			},
+			"repository": {
+						"type": "git",
+						"url": "git+https://github.com/druce/swr"
+			},
+			"author": "Druce Vertes",
+			"license": "MIT",
+			"homepage": "http://www.streeteye.com/static/swr/"
 }
