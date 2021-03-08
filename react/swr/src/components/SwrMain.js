@@ -109,16 +109,27 @@ export class SwrMain extends Component {
 
             portvals.push(portval);
             let exhausted = false;
+            // let verbose = cohort_start === 0 ? true : false
+            // log to console to compare with python notebook output
+            // if (verbose) console.log('start ');
+
             for (let cohort_year=0; cohort_year<n_ret_years; cohort_year++) {
                 let current_year = cohort_start + cohort_year;
+
                 let real_return = stock_alloc * stocks[current_year] + bond_alloc * bonds[current_year];
                 portval *= ( 1 + real_return );
+                // let debugstr = 'before spend ' + portval;
                 let desired_spend = this.state.withdrawal_fixed_pct + portval * withdrawal_variable;
                 desired_spend = Math.max(desired_spend, this.state.withdrawal_floor_pct);
                 let spendval = Math.min(portval, desired_spend);
+                // debugstr += ' spend ' + spendval;
+
                 spendvals.push(spendval);
                 portval -= spendval;
                 portvals.push(portval);
+                // debugstr += ' end ' + portval;
+                // if (verbose) console.log(debugstr);
+
                 if (portval === 0) {
                     if (!exhausted) {
                         exhausted = true;
