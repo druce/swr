@@ -1,4 +1,5 @@
 import numpy as np
+import pdb
 
 def crra_ce(cashflows, gamma):
     """takes a numpy array, returns total CRRA certainty-equivalent cash flow
@@ -25,6 +26,8 @@ def crra_ce(cashflows, gamma):
         return 0.0
     elif gamma >= 1.0 and 0 in cashflows:
         return 0.0
+    elif gamma == 0.0: # simple optimization
+        ce = np.mean(cashflows)        
     elif gamma == 1.0:
         # general formula for CRRA utility undefined for test_gamma = 1 but limit as test_gamma->1 = log
         if np.any(np.where(cashflows == 0, 1, 0)):
@@ -158,12 +161,14 @@ def crra_utility(cashflows, gamma):
     Returns:
         float: utility (ranges from -infinity to plus infinity, when gamma is > 1, max is bounded)
     """
-    
+
     # for retirement study assume no negative cashflows
     if np.any(np.where(cashflows < 0, 1, 0)):
         return -np.inf
     elif gamma >= 1.0 and 0.0 in cashflows:
         return -np.inf
+    elif gamma == 0.0:
+        return np.sum(cashflows)
     elif gamma == 1.0:
         # general formula for CRRA utility undefined for test_gamma = 1 but limit as test_gamma->1 = log
         if np.any(np.where(cashflows <= 0, 1, 0)):
@@ -185,7 +190,7 @@ def crra_utility(cashflows, gamma):
         return np.float(u)
     elif gamma > 1.0:
         if 0.0 in cashflows:
-            return 0.0
+            return -np.inf
         gamma_m1 = gamma - 1.0
         gamma_m1_inverse = 1.0 / gamma_m1
         return np.sum(gamma_m1_inverse - 1.0 / (gamma_m1 * cashflows ** gamma_m1))

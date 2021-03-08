@@ -1,17 +1,46 @@
+# attempt to maximize CRRA utility instead of CE spending
+# doesn't give good results
+# this may be because when gamma > 1, utility diverges to -inf as real spending approaches 0
+# or it could be some error
+
 import copy
+from dataclasses import dataclass, field
+from typing import List
+import pdb
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import pdb
+
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 
-from .SWRsimulation import SWRsimulation, Trialdata
+from .SWRsimulation import SWRsimulation
 from .eval_metrics import eval_crra_utility, eval_exhaustion, eval_mean_spend, eval_median_spend, eval_min_spend, \
     eval_max_spend, eval_sd_spend
-START_PORTVAL = 1.0
+
+START_PORTVAL = 25.0
+
+@dataclass
+class Trialdata:
+    """
+    Class for keeping track of a latest_trial.
+    """
+    year: int = 0
+    spend: float = 0
+    iteration: int = 0
+    portval: float = START_PORTVAL
+
+    years: List[int] = field(default_factory=list)
+    start_ports: List[float] = field(default_factory=list)
+    asset_allocations: List[np.array] = field(default_factory=list)
+    port_returns: List[float] = field(default_factory=list)
+    before_spends: List[float] = field(default_factory=list)
+    end_ports: List[float] = field(default_factory=list)
+    spends: List[float] = field(default_factory=list)
+    trial_df: pd.DataFrame = None
 
 
 class SWRsimulationCRRA(SWRsimulation):
@@ -452,7 +481,7 @@ class SWRsimulationCRRA(SWRsimulation):
         start_years = [i for i in range(len(self.latest_simulation))]
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_rows, portval_cols = portvals.shape
-        portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * 100), portvals]).T,
+        portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * START_PORTVAL), portvals]).T,
                                   columns=start_years)
 
         mpl_options = {
@@ -574,7 +603,7 @@ class SWRsimulationCRRA(SWRsimulation):
 
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
-        portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals]).T,
+        portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * START_PORTVAL), portvals]).T,
                                   columns=years)
         portval_df['median'] = portval_df.median(axis=1)
         portval_df.reset_index(inplace=True)
@@ -651,7 +680,7 @@ class SWRsimulationCRRA(SWRsimulation):
             Plotly Express chart object: chart
         """
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
-        portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals])).transpose()
+        portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * START_PORTVAL), portvals])).transpose()
         col_list = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         portval_df.columns = col_list
         portval_df['median'] = portval_df.median(axis=1)

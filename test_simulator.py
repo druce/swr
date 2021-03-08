@@ -3,6 +3,7 @@
 # pip install pytest
 # pytest -q test_simulation.py
 import pytest
+import numpy as np
 import pandas as pd
 from SWRsimulation import SWRsimulationCE
 
@@ -207,7 +208,7 @@ def test_variable2():
     assert (z['end_port'].iloc[-1]) == 100, "end port value correct"
 
 
-def test_bengen():
+def test_bengen1():
     """matches Bengen values, modulo using real values throughout"""
     # per appendix of Bengen paper https://www.retailinvestor.org/pdf/Bengen1.pdf
     # nominal return 10% for stocks, 5% for bonds
@@ -246,5 +247,147 @@ def test_bengen():
     assert z.iloc[0]['before_spend'] * 1.03 == pytest.approx(107.5, 0.000001)
     assert z.iloc[0]['spend'] * 1.03 == 4.12, "spend does not match Bengen"
     assert z.iloc[0]['end_port'] * 1.03 == pytest.approx(103.38, 0.000001), "ending port does not match Bengen"
+
+def test_bengen2():
+    """matches Bengen values, use historical return data"""
+    FIXED = 4.0
+    VARIABLE = 0.0
+    FLOOR = 4.0
+    NYEARS = 30
+
+    download_df = load_returns()
+    return_df = download_df.iloc[:, [0, 3, 12]]
+    return_df.columns=['stocks', 'bonds', 'cpi']
+    real_return_df = return_df.copy()
+    real_return_df['stocks'] = (1 + real_return_df['stocks']) / (1 + real_return_df['cpi']) - 1
+    real_return_df['bonds'] = (1 + real_return_df['bonds']) / (1 + real_return_df['cpi']) - 1
+    real_return_df.drop('cpi', axis=1, inplace=True)
+    
+    s = SWRsimulationCE.SWRsimulationCE({
+        'simulation': {'returns_df': real_return_df,
+                       'n_ret_years': NYEARS,
+        },
+        'allocation': {},  # no args, default equal weight
+        'withdrawal': {'fixed_pct': FIXED,
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR},
+        'evaluation': {'gamma': 0},
+    })
+
+    z = s.simulate()
+
+    assert z[0]['trial'].iloc[0]['spend'] == 4.0, "bad value: cohort 0 year 0 spend"
+    assert z[0]['trial'].iloc[0]['end_port'] == pytest.approx(120.955061, 0.000001), "bad value: cohort 0 year 0 end port"
+    assert z[0]['trial'].iloc[-1]['spend'] == 4.0, "bad value: cohort 0 final year spend"
+    assert z[0]['trial'].iloc[-1]['end_port'] == pytest.approx(189.255136, 0.000001), "bad value: cohort 0 final year end port"
+
+
+def test_45():
+    """4/5% using historical returns"""
+    FIXED = -1
+    VARIABLE = 5.0
+    FLOOR = 4.0
+    NYEARS = 30
+
+    download_df = load_returns()
+    return_df = download_df.iloc[:, [0, 3, 12]]
+    return_df.columns=['stocks', 'bonds', 'cpi']
+    real_return_df = return_df.copy()
+    real_return_df['stocks'] = (1 + real_return_df['stocks']) / (1 + real_return_df['cpi']) - 1
+    real_return_df['bonds'] = (1 + real_return_df['bonds']) / (1 + real_return_df['cpi']) - 1
+    real_return_df.drop('cpi', axis=1, inplace=True)
+    
+    s = SWRsimulationCE.SWRsimulationCE({
+        'simulation': {'returns_df': real_return_df,
+                       'n_ret_years': NYEARS,
+        },
+        'allocation': {},  # no args, default equal weight
+        'withdrawal': {'fixed_pct': FIXED,
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR},
+        'evaluation': {'gamma': 0},
+    })
+
+    z = s.simulate()
+
+    assert z[0]['trial'].iloc[0]['spend'] == pytest.approx(5.247753, 0.000001), "bad value: cohort 0 year 0 spend"
+    assert z[0]['trial'].iloc[0]['end_port'] == pytest.approx(119.707308, 0.000001), "bad value: cohort 0 year 0 end port"
+    assert z[0]['trial'].iloc[-1]['spend'] == pytest.approx(5.690874, 0.000001), "bad value: cohort 0 final year spend"
+    assert z[0]['trial'].iloc[-1]['end_port'] == pytest.approx(128.126609, 0.000001), "bad value: cohort 0 final year end port"
+
+
+def test_high_gamma():
+    """a gamma 16 rule using historical returns"""
+
+    FIXED = 3.5
+    VARIABLE = 1.1
+    FLOOR = 3.8
+    NYEARS = 30
+    STOCK_PCT = 0.73
+    BOND_PCT = 0.27
+
+    download_df = load_returns()
+    return_df = download_df.iloc[:, [0, 3, 12]]
+    return_df.columns=['stocks', 'bonds', 'cpi']
+    real_return_df = return_df.copy()
+    real_return_df['stocks'] = (1 + real_return_df['stocks']) / (1 + real_return_df['cpi']) - 1
+    real_return_df['bonds'] = (1 + real_return_df['bonds']) / (1 + real_return_df['cpi']) - 1
+    real_return_df.drop('cpi', axis=1, inplace=True)
+    
+    s = SWRsimulationCE.SWRsimulationCE({
+        'simulation': {'returns_df': real_return_df,
+                       'n_ret_years': NYEARS,
+        },
+        'allocation': {'asset_weights': np.array([STOCK_PCT, BOND_PCT])},
+        'withdrawal': {'fixed_pct': FIXED,
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR},
+        'evaluation': {'gamma': 0},
+    })
+
+    z = s.simulate()
+
+    assert z[0]['trial'].iloc[0]['spend'] == pytest.approx(4.978399, 0.000001), "bad value: cohort 0 year 0 spend"
+    assert z[0]['trial'].iloc[0]['end_port'] == pytest.approx(129.421552, 0.000001), "bad value: cohort 0 year 0 end port"
+    assert z[0]['trial'].iloc[-1]['spend'] == pytest.approx(5.068669, 0.000001), "bad value: cohort 0 final year spend"
+    assert z[0]['trial'].iloc[-1]['end_port'] == pytest.approx(137.537621, 0.000001), "bad value: cohort 0 final year end port"
+
+
+def test_low_gamma():
+    """a lower gamma rule using historical returns"""
+
+    FIXED = 0.7
+    VARIABLE = 5.8
+    FLOOR = 3.4
+    NYEARS = 30
+    STOCK_PCT = 0.89
+    BOND_PCT = 0.11
+
+    download_df = load_returns()
+    return_df = download_df.iloc[:, [0, 3, 12]]
+    return_df.columns=['stocks', 'bonds', 'cpi']
+    real_return_df = return_df.copy()
+    real_return_df['stocks'] = (1 + real_return_df['stocks']) / (1 + real_return_df['cpi']) - 1
+    real_return_df['bonds'] = (1 + real_return_df['bonds']) / (1 + real_return_df['cpi']) - 1
+    real_return_df.drop('cpi', axis=1, inplace=True)
+    
+    s = SWRsimulationCE.SWRsimulationCE({
+        'simulation': {'returns_df': real_return_df,
+                       'n_ret_years': NYEARS,
+        },
+        'allocation': {'asset_weights': np.array([STOCK_PCT, BOND_PCT])},
+        'withdrawal': {'fixed_pct': FIXED,
+                       'variable_pct': VARIABLE,
+                       'floor_pct': FLOOR},
+        'evaluation': {'gamma': 0},
+    })
+
+    z = s.simulate()
+
+    assert z[0]['trial'].iloc[0]['spend'] == pytest.approx(8.876278, 0.000001), "bad value: cohort 0 year 0 spend"
+    assert z[0]['trial'].iloc[0]['end_port'] == pytest.approx(132.094032, 0.000001), "bad value: cohort 0 year 0 end port"
+    assert z[0]['trial'].iloc[-1]['spend'] == pytest.approx(5.135414, 0.000001), "bad value: cohort 0 final year spend"
+    assert z[0]['trial'].iloc[-1]['end_port'] == pytest.approx(71.337240, 0.000001), "bad value: cohort 0 final year end port"
+
 
 print("running standalone")

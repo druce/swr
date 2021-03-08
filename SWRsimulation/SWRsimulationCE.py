@@ -451,7 +451,7 @@ class SWRsimulationCE(SWRsimulation):
         start_years = [i for i in range(len(self.latest_simulation))]
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         portval_rows, portval_cols = portvals.shape
-        portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * 100), portvals]).T,
+        portval_df = pd.DataFrame(data=np.hstack([(np.ones(portval_rows).reshape(portval_rows, 1) * START_PORTVAL), portvals]).T,
                                   columns=start_years)
 
         mpl_options = {
@@ -573,7 +573,8 @@ class SWRsimulationCE(SWRsimulation):
 
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
         years = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
-        portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals]).T,
+        n_cohorts = len(self.latest_simulation)
+        portval_df = pd.DataFrame(data=np.hstack([(np.ones(n_cohorts).reshape(n_cohorts, 1) * START_PORTVAL), portvals]).T,
                                   columns=years)
         portval_df['median'] = portval_df.median(axis=1)
         portval_df.reset_index(inplace=True)
@@ -650,7 +651,8 @@ class SWRsimulationCE(SWRsimulation):
             Plotly Express chart object: chart
         """
         portvals = np.array([trial_dict['trial']['end_port'].values for trial_dict in self.latest_simulation])
-        portval_df = pd.DataFrame(data=np.hstack([(np.ones(64).reshape(64, 1) * 100), portvals])).transpose()
+        n_cohorts = len(self.latest_simulation)
+        portval_df = pd.DataFrame(data=np.hstack([(np.ones(n_cohorts).reshape(n_cohorts, 1) * START_PORTVAL), portvals])).transpose()
         col_list = [trial_dict['trial'].index[0] for trial_dict in self.latest_simulation]
         portval_df.columns = col_list
         portval_df['median'] = portval_df.median(axis=1)
