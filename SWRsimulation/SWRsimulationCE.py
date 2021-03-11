@@ -415,7 +415,7 @@ class SWRsimulationCE(SWRsimulation):
         mpl_options = {
             'title': "Spending by Retirement Year",
             'title_fontsize': 20,
-            'ylabel': 'Spending',
+            'ylabel': 'Spending (% of starting portfolio)',
             'ylabel_fontsize': 16,
             'xlabel': 'Retirement Year',
             'xlabel_fontsize': 16,
@@ -510,7 +510,7 @@ class SWRsimulationCE(SWRsimulation):
             spendvals.append(test_sim.get_withdrawal())
 
         mpl_options = {
-            'title': "Withdrawal Profile (Withdrawal Value vs. Portfolio Value)",
+            'title': "Withdrawal Rule Profile (Withdrawal Value vs. Portfolio Value)",
             'title_fontsize': 20,
             'ylabel': 'Portfolio Value',
             'ylabel_fontsize': 16,
