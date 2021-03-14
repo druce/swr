@@ -60,4 +60,4 @@ s.visualize()
 
 Work-in-progress, YMMV, reach out with any questions, suggestions...pull requests are welcome.
 
-[Interactive calculations and visualizations app here](http://www.streeteye.com/static/swr/)
+[React app that does interactive calculations and visualizations - see react/swr](http://www.streeteye.com/static/swr/)
