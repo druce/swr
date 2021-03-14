@@ -9,7 +9,6 @@ class SwrSliders extends Component {
     constructor(props) {
         super(props);
         this.bengen1 = this.bengen1.bind(this);
-        this.bengen2 = this.bengen2.bind(this);
         this.ce1 = this.ce1.bind(this);
         this.ce2 = this.ce2.bind(this);
     }
@@ -64,16 +63,6 @@ class SwrSliders extends Component {
         }, this.props.mainObj.do_recalc);
     }
 
-    bengen2() {
-        this.props.mainObj.setState({
-            stock_alloc_pct: 50.0,
-            bond_alloc_pct: 50.0,
-            withdrawal_fixed_pct: -1.0,
-            withdrawal_variable_pct: 5.0,
-            withdrawal_floor_pct: 4.0
-        }, this.props.mainObj.do_recalc);
-    }
-
     ce1() {
         this.props.mainObj.setState({
             stock_alloc_pct: 73.0,
@@ -88,9 +77,9 @@ class SwrSliders extends Component {
         this.props.mainObj.setState({
             stock_alloc_pct: 89.0,
             bond_alloc_pct: 11.0,
-            withdrawal_fixed_pct: 0.7,
-            withdrawal_variable_pct: 5.8,
-            withdrawal_floor_pct: 3.4
+            withdrawal_fixed_pct: 2.6,
+            withdrawal_variable_pct: 2.9,
+            withdrawal_floor_pct: 3.5
         }, this.props.mainObj.do_recalc);
     }
 
@@ -179,13 +168,11 @@ class SwrSliders extends Component {
                     <div className="container">
                     <div className="row ">
                         <div className="col-12">
-                                <Button data-testid="button1" outline color="secondary" onClick={this.bengen1}>Bengen original 4%</Button>
+                                <Button data-testid="button1" outline color="secondary" onClick={this.bengen1}>Bengen 4% rule</Button>
                                 &nbsp;
-                                <Button data-testid="button2" outline color="secondary" onClick={this.bengen2}>Relaxed 4%/5%</Button>
+                                <Button data-testid="button3" outline color="secondary" onClick={this.ce1}>Low risk rule (gamma=16)</Button>
                                 &nbsp;
-                                <Button data-testid="button3" outline color="secondary" onClick={this.ce1}>Max CE w/high risk aversion</Button>
-                                &nbsp;
-                                <Button  data-testid="button4" outline color="secondary" onClick={this.ce2}>Max CE w/low risk aversion</Button>
+                                <Button  data-testid="button4" outline color="secondary" onClick={this.ce2}>High risk rule (gamma=4)</Button>
                         </div>
                     </div>
             </div>
