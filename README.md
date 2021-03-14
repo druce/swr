@@ -58,6 +58,6 @@ s.visualize()
 
 ```
 
-Work-in-progress, YMMV, reach out with any questions, suggestions...pull requests are welcome.
+Work-in-progress, YMMV. Open issues with any questions, suggestions. Pull requests are welcome.
 
-[React app that does interactive calculations and visualizations - see react/swr](http://www.streeteye.com/static/swr/)
+[React app that does interactive calculations and visualizations - see code in react/swr](http://www.streeteye.com/static/swr/)
