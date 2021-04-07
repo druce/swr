@@ -316,11 +316,11 @@ class SWRsimulationCE(SWRsimulation):
 
         min_port_values  = np.array([trial_dict['min_end_port'] for trial_dict in self.latest_simulation])
         min_port_value = np.min(min_port_values)
-        min_port_value_indexes = np.where(min_port_values==min_port_value, 1, 0)
-        min_port_value_indexes = [i for i, m in enumerate(min_port_value_indexes) if m==1]
-        min_port_value_years = [self.latest_simulation[i]['trial'].index[0] for i in min_port_value_indexes]
         table_dict["minimum ending portfolio over all cohorts"] = min_port_value
-        table_dict["minimum ending portfolio in years"] = str(min_port_value_years)
+        # min_port_value_indexes = np.where(min_port_values==min_port_value, 1, 0)
+        # min_port_value_indexes = [i for i, m in enumerate(min_port_value_indexes) if m==1]
+        # min_port_value_years = [self.latest_simulation[i]['trial'].index[0] for i in min_port_value_indexes]
+        # table_dict["minimum ending portfolio in years"] = str(min_port_value_years)
         
         survival = [trial_dict['exhaustion']
                     for trial_dict in self.latest_simulation]

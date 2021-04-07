@@ -1,4 +1,9 @@
 # swr
+
+![outcome.png](outcome.png)
+
+![optimal_by_gamma_table.png](optimal_by_gamma_table.png)
+
 A framework for determining safe withdrawal rates, designed to accommodate:
 
 - Any generator of historical asset returns (historical, Monte Carlo, roll your own market environment)
@@ -7,7 +12,7 @@ A framework for determining safe withdrawal rates, designed to accommodate:
 - Any metrics to evaluate retirement cohort outcomes (e.g. total spending, certainty equivalent spending, roll your own. Support for survival tables, i.e. calculate expected metric for living retirees taking into account retirement age and survivorship)
 - Any (gradient-free) optimizer to find optimal parameters (e.g. asset allocation, withdrawal parameters) to maximize a metric in the given market environment
 
-Example (see example.ipynb):
+Example (see [example.ipynb](example.ipynb)):
 
    - Market environment: historical returns 1928-2020; 2 assets, stocks and intermediate-term corporate bonds; analyze 30-year retirement cohorts.
    - Allocation rule: 1 parameter = `stock_alloc`. Allocate a fixed percentage to stocks. `bond_alloc` = 1 - `stock_alloc`.
@@ -15,9 +20,6 @@ Example (see example.ipynb):
    - Metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter.
    - In this example, for each gamma value, we run optimizers to find the parameters (`stock_alloc`, `fixed_pct`, `variable_pct`, `floor_pct`) that would have maximized certainty-equivalent spending over all available 30-year retirement cohorts 1928-1991.
 
-![optimal_by_gamma_table.png](optimal_by_gamma_table.png)
-
-![outcome.png](outcome.png)
 
 ```python
 N_RET_YEARS = 30
@@ -60,4 +62,4 @@ s.visualize()
 
 Work-in-progress, YMMV. Open issues with any questions, suggestions. Pull requests are welcome.
 
-[React app that does interactive calculations and visualizations - see code in react/swr](http://www.streeteye.com/static/swr/)
+[Interactive app that does calculations and visualizations](https://druce.ai/swr-react/) ([React code](https://github.com/druce/swr-react))
