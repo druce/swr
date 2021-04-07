@@ -20,13 +20,6 @@ Example (see [example.ipynb](example.ipynb)):
    - Metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter.
    - In this example, for each gamma value, we run optimizers to find the parameters (`stock_alloc`, `fixed_pct`, `variable_pct`, `floor_pct`) that would have maximized certainty-equivalent spending over all available 30-year retirement cohorts 1928-1991.
 
-To evaluate different strategy, see SWRsimulationCE.py, which inherits from SWRsimulation and overrides relevant methods.
-
-   - to use a different market environment, override `init_simulation` which should set up an appropriate generator function in self.simulation['trials']
-   - to use a different allocation rule, override `init_allocation` and `get_allocations`
-   - to use a different spending rule, override `init_withdrawal` and `get_withdrawal`
-   - to calculate different metrics, override `eval_trial`
-   - see [optimize.ipynb](optimize.ipynb) for an example of running various optimizers to find retirement parameters that optimize a specified metric
 	
 ```python
 N_RET_YEARS = 30
@@ -66,6 +59,14 @@ s.simulate()
 s.visualize()
 
 ```
+
+To implement a different strategy setup, see SWRsimulationCE.py, which inherits from SWRsimulation and override relevant methods.
+
+   - to use a different market environment, override `init_simulation` which should set up an appropriate generator function in self.simulation['trials']
+   - to use a different allocation rule, override `init_allocation` and `get_allocations`
+   - to use a different spending rule, override `init_withdrawal` and `get_withdrawal`
+   - to calculate different metrics, override `eval_trial`
+   - see [optimize.ipynb](optimize.ipynb) for an example of running various optimizers to find retirement parameters that optimize a specified metric
 
 Work-in-progress, YMMV. Open issues with any questions, suggestions. Pull requests are welcome.
 
