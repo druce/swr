@@ -1,4 +1,4 @@
-# swr
+# swr - Safe Withdrawal for Retirement
 
 ![outcome.png](outcome.png)
 
@@ -6,7 +6,7 @@
 
 A Python module for determining safe withdrawal rates, designed to accommodate:
 
-- Any generator of historical asset returns (historical, Monte Carlo, roll your own market environment)
+- Any generator of asset returns (historical cohorts, Monte Carlo, roll your own market environment)
 - Any asset allocation strategy (fixed weights, glidepath schedules, roll your own based on any parameters)
 - Any withdrawal strategy (fixed withdrawal, variable percentage, combinations, glidepaths)
 - Any metrics to evaluate retirement cohort outcomes (e.g. total spending, certainty equivalent spending, roll your own. Support for survival tables, i.e. calculate expected metric for living retirees taking into account retirement age and survivorship)
