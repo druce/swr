@@ -4,7 +4,7 @@
 
 ![optimal_by_gamma_table.png](optimal_by_gamma_table.png)
 
-A framework for determining safe withdrawal rates, designed to accommodate:
+A Python module for determining safe withdrawal rates, designed to accommodate:
 
 - Any generator of historical asset returns (historical, Monte Carlo, roll your own market environment)
 - Any asset allocation strategy (fixed weights, glidepath schedules, roll your own based on any parameters)
@@ -20,7 +20,13 @@ Example (see [example.ipynb](example.ipynb)):
    - Metric to maximize: certainty-equivalent spending under CRRA utility with a gamma risk aversion parameter.
    - In this example, for each gamma value, we run optimizers to find the parameters (`stock_alloc`, `fixed_pct`, `variable_pct`, `floor_pct`) that would have maximized certainty-equivalent spending over all available 30-year retirement cohorts 1928-1991.
 
-
+To evaluate different strategy, see SWRsimulationCE.py, which inherits from SWRsimulation and overrides relevant methods.
+	- to use a different market environment, override `init_simulation` which should set up an appropriate generator function in self.simulation['trials']
+	- to use a different allocation rule, override `init_allocation` and `get_allocations`
+	- to use a different spending rule, override `init_withdrawal` and `get_withdrawal`
+    - to calculate different metrics, override `eval_trial`
+	- see [optimize.ipynb](optimize.ipynb) for an example of running various optimizers to find retirement parameters that optimize a specified metric
+	
 ```python
 N_RET_YEARS = 30
 FIXED_PCT = 3.5
