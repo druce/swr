@@ -62,11 +62,11 @@ s.visualize()
 
 To implement a different strategy context, see [SWRsimulationCE.py](SWRsimulation/SWRsimulationCE.py), which inherits from [SWRsimulation.py](SWRsimulation/SWRsimulation.py). Override relevant methods:
 
-   - to use a different market environment, override `init_simulation` which should initialize an appropriate generator function in self.simulation['trials'].
-   - to use a different allocation rule, override `init_allocation` and `get_allocations`.
-   - to use a different spending rule, override `init_withdrawal` and `get_withdrawal`.
-   - to calculate different metrics, override `eval_trial`.
-   - see [optimize.ipynb](optimize.ipynb) for examples of running gradient-free optimizers to find retirement parameters that optimize a specified metric.
+   - To use a different market environment, override `init_simulation` which should initialize an appropriate generator function in self.simulation['trials'].
+   - To use a different allocation rule, override `init_allocation` and `get_allocations`.
+   - To use a different spending rule, override `init_withdrawal` and `get_withdrawal`.
+   - To calculate different metrics, override `eval_trial`.
+   - See [optimize.ipynb](optimize.ipynb) for examples of running gradient-free optimizers to find retirement parameters that optimize a specified metric.
 
 Work-in-progress, YMMV. Open issues with any questions, suggestions. Pull requests are welcome.
 
